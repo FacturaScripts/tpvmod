@@ -448,9 +448,7 @@ class tpvmod extends fs_controller
       $continuar = TRUE;
       
       $cliente = $this->cliente->get($_POST['cliente']);
-      if( $cliente )
-         $this->save_codcliente( $cliente->codcliente );
-      else
+      if( !$cliente )
       {
          $this->new_error_msg('Cliente no encontrado.');
          $continuar = FALSE;
@@ -467,9 +465,7 @@ class tpvmod extends fs_controller
       
       $eje0 = new ejercicio();
       $ejercicio = $eje0->get_by_fecha($_POST['fecha']);
-      if( $ejercicio )
-         $this->save_codejercicio( $ejercicio->codejercicio );
-      else
+      if( !$ejercicio )
       {
          $this->new_error_msg('Ejercicio no encontrado.');
          $continuar = FALSE;
@@ -492,9 +488,7 @@ class tpvmod extends fs_controller
       }
       
       $divisa = $this->divisa->get($_POST['divisa']);
-      if( $divisa )
-         $this->save_coddivisa( $divisa->coddivisa );
-      else
+      if( !$divisa )
       {
          $this->new_error_msg('Divisa no encontrada.');
          $continuar = FALSE;
@@ -532,7 +526,7 @@ class tpvmod extends fs_controller
             {
                $presupuesto->codcliente = $cliente->codcliente;
                $presupuesto->cifnif = $cliente->cifnif;
-               $presupuesto->nombrecliente = $cliente->nombrecomercial;
+               $presupuesto->nombrecliente = $cliente->razonsocial;
                $presupuesto->apartado = $d->apartado;
                $presupuesto->ciudad = $d->ciudad;
                $presupuesto->coddir = $d->id;
@@ -645,9 +639,7 @@ class tpvmod extends fs_controller
       $continuar = TRUE;
       
       $cliente = $this->cliente->get($_POST['cliente']);
-      if( $cliente )
-         $this->save_codcliente( $cliente->codcliente );
-      else
+      if( !$cliente )
       {
          $this->new_error_msg('Cliente no encontrado.');
          $continuar = FALSE;
@@ -664,9 +656,7 @@ class tpvmod extends fs_controller
       
       $eje0 = new ejercicio();
       $ejercicio = $eje0->get_by_fecha($_POST['fecha']);
-      if( $ejercicio )
-         $this->save_codejercicio( $ejercicio->codejercicio );
-      else
+      if( !$ejercicio )
       {
          $this->new_error_msg('Ejercicio no encontrado.');
          $continuar = FALSE;
@@ -689,9 +679,7 @@ class tpvmod extends fs_controller
       }
       
       $divisa = $this->divisa->get($_POST['divisa']);
-      if( $divisa )
-         $this->save_coddivisa( $divisa->coddivisa );
-      else
+      if( ! $divisa )
       {
          $this->new_error_msg('Divisa no encontrada.');
          $continuar = FALSE;
@@ -728,7 +716,7 @@ class tpvmod extends fs_controller
             {
                $factura->codcliente = $cliente->codcliente;
                $factura->cifnif = $cliente->cifnif;
-               $factura->nombrecliente = $cliente->nombrecomercial;
+               $factura->nombrecliente = $cliente->razonsocial;
                $factura->apartado = $d->apartado;
                $factura->ciudad = $d->ciudad;
                $factura->coddir = $d->id;
@@ -844,9 +832,7 @@ class tpvmod extends fs_controller
       $continuar = TRUE;
       
       $cliente = $this->cliente->get($_POST['cliente']);
-      if( $cliente )
-         $this->save_codcliente( $cliente->codcliente );
-      else
+      if( !$cliente )
       {
          $this->new_error_msg('Cliente no encontrado.');
          $continuar = FALSE;
@@ -863,9 +849,7 @@ class tpvmod extends fs_controller
       
       $eje0 = new ejercicio();
       $ejercicio = $eje0->get_by_fecha($_POST['fecha']);
-      if( $ejercicio )
-         $this->save_codejercicio( $ejercicio->codejercicio );
-      else
+      if( !$ejercicio )
       {
          $this->new_error_msg('Ejercicio no encontrado.');
          $continuar = FALSE;
@@ -888,9 +872,7 @@ class tpvmod extends fs_controller
       }
       
       $divisa = $this->divisa->get($_POST['divisa']);
-      if( $divisa )
-         $this->save_coddivisa( $divisa->coddivisa );
-      else
+      if( !$divisa )
       {
          $this->new_error_msg('Divisa no encontrada.');
          $continuar = FALSE;
@@ -927,7 +909,7 @@ class tpvmod extends fs_controller
             {
                $pedido->codcliente = $cliente->codcliente;
                $pedido->cifnif = $cliente->cifnif;
-               $pedido->nombrecliente = $cliente->nombrecomercial;
+               $pedido->nombrecliente = $cliente->razonsocial;
                $pedido->apartado = $d->apartado;
                $pedido->ciudad = $d->ciudad;
                $pedido->coddir = $d->id;
@@ -1048,9 +1030,7 @@ class tpvmod extends fs_controller
       }
       
       $ejercicio = $this->ejercicio->get_by_fecha($_POST['fecha']);
-      if( $ejercicio )
-         $this->save_codejercicio( $ejercicio->codejercicio );
-      else
+      if( !$ejercicio )
       {
          $this->new_error_msg('Ejercicio no encontrado.');
          $continuar = FALSE;
@@ -1075,9 +1055,7 @@ class tpvmod extends fs_controller
       }
       
       $divisa = $this->divisa->get($_POST['divisa']);
-      if( $divisa )
-         $this->save_coddivisa( $divisa->coddivisa );
-      else
+      if( !$divisa )
       {
          $this->new_error_msg('Divisa no encontrada.');
          $continuar = FALSE;
@@ -1136,7 +1114,7 @@ class tpvmod extends fs_controller
             {
                $albaran->codcliente = $this->cliente_s->codcliente;
                $albaran->cifnif = $this->cliente_s->cifnif;
-               $albaran->nombrecliente = $this->cliente_s->nombrecomercial;
+               $albaran->nombrecliente = $this->cliente_s->razonsocial;
                $albaran->apartado = $d->apartado;
                $albaran->ciudad = $d->ciudad;
                $albaran->coddir = $d->id;
