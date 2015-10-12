@@ -218,6 +218,82 @@ function get_precios(ref)
    });
 }
 
+function add_linea_libre()
+{
+   numlineas += 1;
+   $("#numlineas").val(numlineas);
+   codimpuesto = false;
+   for(var i=0; i<all_impuestos.length; i++)
+   {
+      codimpuesto = all_impuestos[i].codimpuesto;
+      break;
+   }
+   
+   
+   
+   $("#lineas_albaran").prepend("<tr id=\"linea_"+numlineas+"\">\n\
+      <td><input type=\"hidden\" name=\"idlinea_"+numlineas+"\" value=\"-1\"/>\n\
+         <input type=\"hidden\" name=\"referencia_"+numlineas+"\"/>\n\
+         <div class=\"form-control\"></div></td>\n\
+      <td><textarea class=\"form-control\" id=\"desc_"+numlineas+"\" name=\"desc_"+numlineas+"\" rows=\"1\" onclick=\"this.select()\"></textarea></td>\n\
+      <td><input type=\"number\" step=\"any\" id=\"cantidad_"+numlineas+"\" class=\"form-control text-right\" name=\"cantidad_"+numlineas+
+         "\" onchange=\"recalcular()\" onkeyup=\"recalcular()\" autocomplete=\"off\" value=\"1\"/></td>\n\
+      <td><button class=\"btn btn-sm btn-danger\" type=\"button\" onclick=\"$('#linea_"+numlineas+"').remove();recalcular();\">\n\
+         <span class=\"glyphicon glyphicon-trash\"></span></button></td>\n\
+      <td><input type=\"text\" class=\"form-control text-right\" id=\"pvp_"+numlineas+"\" name=\"pvp_"+numlineas+"\" value=\"0\"\n\
+          onkeyup=\"recalcular()\" onclick=\"this.select()\" autocomplete=\"off\"/></td>\n\
+      <td><input type=\"text\" class=\"form-control text-right\" id=\"neto_"+numlineas+"\" name=\"neto_"+numlineas+
+         "\" onchange=\"ajustar_neto()\" onclick=\"this.select()\" autocomplete=\"off\"/></td>\n\
+      "+aux_all_impuestos(numlineas,codimpuesto)+"\n\
+      <td><input type=\"text\" class=\"form-control text-right\" id=\"total_"+numlineas+"\" name=\"total_"+numlineas+
+         "\" onchange=\"ajustar_total()\" onclick=\"this.select()\" autocomplete=\"off\"/></td></tr>");
+   recalcular();
+   
+   $("#desc_"+(numlineas-1)).select();
+   return false;
+}
+
+function aux_all_impuestos(num,codimpuesto)
+{
+   var iva = 0;
+   var recargo = 0;
+   if(cliente.regimeniva != 'Exento' && !siniva)
+   {
+      for(var i=0; i<all_impuestos.length; i++)
+      {
+         if(all_impuestos[i].codimpuesto == codimpuesto)
+         {
+            iva = all_impuestos[i].iva;
+            if(cliente.recargo)
+            {
+              recargo = all_impuestos[i].recargo;
+            }
+            break;
+         }
+      }
+   }
+   
+   var html = "<td><select id=\"iva_"+num+"\" class=\"form-control\" name=\"iva_"+num+"\" onchange=\"ajustar_iva('"+num+"')\">";
+   for(var i=0; i<all_impuestos.length; i++)
+   {
+      if(iva == all_impuestos[i].iva)
+      {
+         html += "<option value=\""+all_impuestos[i].iva+"\" selected=\"selected\">"+all_impuestos[i].descripcion+"</option>";
+      }
+      else
+         html += "<option value=\""+all_impuestos[i].iva+"\">"+all_impuestos[i].descripcion+"</option>";
+   }
+   html += "</select></td>";
+   
+   html += "<td class=\"recargo\"><input type=\"text\" class=\"form-control text-right\" id=\"recargo_"+num+"\" name=\"recargo_"+num+
+           "\" value=\""+recargo+"\" onclick=\"this.select()\" onkeyup=\"recalcular()\" autocomplete=\"off\"/></td>";
+   
+   html += "<td class=\"irpf\"><input type=\"text\" class=\"form-control text-right\" id=\"irpf_"+num+"\" name=\"irpf_"+num+
+         "\" value=\""+irpf+"\" onclick=\"this.select()\" onkeyup=\"recalcular()\" autocomplete=\"off\"/></td>";
+   
+   return html;
+}
+
 function add_articulo(ref,desc,pvp,dto,codimpuesto,cantidad)
 {
    numlineas += 1;
