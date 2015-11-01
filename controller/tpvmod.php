@@ -1240,6 +1240,20 @@ class tpvmod extends fs_controller
       else
          $this->new_error_msg('Sólo un administrador puede abrir la caja.');
    }
+
+   private function share_extensions()
+   {
+      $extension = array(
+          'name' => 'tpvmod',
+          'page_from' => __CLASS__,
+          'page_to' => 'ventas_presupuesto',
+          'type' => 'button',
+          'text' => '<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> &nbsp; Abrir con TPVMOD',
+          'params' => ''
+      );
+      $fsext = new fs_extension($extension);
+      $fsext->save();
+   }
    
    private function cerrar_caja()
    {
