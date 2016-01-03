@@ -358,6 +358,7 @@ class tpvmod extends fs_controller
    {
       /// cambiamos la plantilla HTML
       $this->template = 'ajax/tpv_recambios';
+      //$this->template=false;
       
       $codfamilia = '';
       if( isset($_POST['codfamilia']) )
@@ -410,7 +411,11 @@ class tpvmod extends fs_controller
             }
          }
       }
+      //header('Content-Type: application/json');
+      //echo json_encode($this->results);
    }
+   
+   
    
    private function get_precios_articulo()
    {
