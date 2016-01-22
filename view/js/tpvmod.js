@@ -26,6 +26,16 @@ var all_impuestos = [];
 var all_series = [];
 var cliente = false;
 
+//para evitar que cuando le des al intro te mande el formulario
+function stopRKey(evt) {
+var evt = (evt) ? evt : ((event) ? event : null);
+var node = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null);
+if ((evt.keyCode == 13) && (node.type=="text")) {
+    ajustar_total();
+    return false;}
+}
+document.onkeypress = stopRKey; 
+
 function usar_cliente(codcliente)
 {
    if(nueva_venta_url !== '')
@@ -97,6 +107,7 @@ function recalcular()
    {
       if($("#linea_"+i).length > 0)
       {
+         
          l_uds = parseFloat( $("#cantidad_"+i).val() );
          l_pvp = parseFloat( $("#pvp_"+i).val() );
          l_neto = l_uds*l_pvp;
@@ -114,7 +125,7 @@ function recalcular()
          }
          
          $("#neto_"+i).val( l_neto );
-         if(numlineas == 1)
+         if(numlineas == 0)
          {
             $("#total_"+i).val( fs_round(l_neto, fs_nf0) + fs_round(l_neto*(l_iva-l_irpf+l_recargo)/100, fs_nf0) );
          }
@@ -127,6 +138,7 @@ function recalcular()
          total_iva += l_neto * l_iva/100;
          total_irpf += l_neto * l_irpf/100;
          total_recargo += l_neto * l_recargo/100;
+         console.log("Ajuste recalcular: "+i+" cantidad: "+l_uds+" pvp: "+l_pvp+" neto: "+l_neto+" dto: "+l_dto+" irpf: "+l_irpf);
       }
    }
    
@@ -177,27 +189,28 @@ function ajustar_total()
    
    for(var i=1; i<=numlineas; i++)
    {
+      console.log("Numeros de lineas "+numlineas);
       if($("#linea_"+i).length > 0)
       {
          l_uds = parseFloat( $("#cantidad_"+i).val() );
          l_pvp = parseFloat( $("#pvp_"+i).val() );
          l_iva = parseFloat( $("#iva_"+i).val() );
-         l_recargo = parseFloat( $("#recargo_"+i).val() );
          
          l_irpf = irpf;
          if(l_iva <= 0)
             l_irpf = 0;
          
          l_total = parseFloat( $("#total_"+i).val() );
+         console.log("Total "+l_total);
          if( isNaN(l_total) )
             l_total = 0;
          
         
             l_dto = 0;
-            l_neto = 100*l_total/(100+l_iva-l_irpf+l_recargo);
+            l_neto = 100*l_total/(100+l_iva-l_irpf);
             l_pvp = l_neto/l_uds;
 
-         
+         console.log("Ajuste total fila: "+i+" cantidad: "+l_uds+" pvp: "+l_pvp+" neto: "+l_neto+" dto: "+l_dto+" irpf: "+l_irpf+" total: "+l_total);
          $("#pvp_"+i).val(l_pvp);
       }
    }
@@ -303,7 +316,7 @@ function add_articulo(ref,desc,pvp,dto,codimpuesto,cantidad)
    var recargo = 0;
    if(cliente.regimeniva != 'Exento' && !siniva)
    {
-      for(var i=0; i<all_impuestos.length; i++)
+      for(var i=0; i<=all_impuestos.length; i++)
       {
          if(all_impuestos[i].codimpuesto == codimpuesto)
          {
@@ -319,6 +332,7 @@ function add_articulo(ref,desc,pvp,dto,codimpuesto,cantidad)
    
    $("#lineas_albaran").prepend("<tr id=\"linea_"+numlineas+"\">\n\
          <td><input type=\"hidden\" name=\"referencia_"+numlineas+"\" value=\""+ref+"\"/>\n\
+            <input type=\"hidden\" name=\"idlinea_"+numlineas+"\" value=\"-1\"/>\n\
             <input type=\"hidden\" id=\"iva_"+numlineas+"\" name=\"iva_"+numlineas+"\" value=\""+iva+"\"/>\n\
             <input type=\"hidden\" id=\"recargo_"+numlineas+"\" name=\"recargo_"+numlineas+"\" value=\""+recargo+"\"/>\n\
             <input type=\"hidden\" id=\"irpf_"+numlineas+"\" name=\"irpf_"+numlineas+"\" value=\""+irpf+"\"/>\n\
