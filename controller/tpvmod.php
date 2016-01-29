@@ -61,6 +61,10 @@ class tpvmod extends fs_controller
    public $linea_mejor=array();
    public $lista_proveedores=array();
    public $tipo="factura";
+   public $vienede;
+   public $id_documento;
+   public $clientedefault="000001";
+   public $documento;
    /*la opcion por defecto aqui la inicializo a facturas. Pero si esta activado
     * Los presupuestos la cambio a presupuestos en el controlador
     */
@@ -78,7 +82,7 @@ class tpvmod extends fs_controller
       
       $this->articulo = new articulo();
       $this->cliente = new cliente();
-      $this->cliente_s = $this->cliente->get("000001");//cargo el cliente por defecto que en mi caso es cliente de contado con codcliente 000001 si no tienes cliente por defecto pon false
+      $this->cliente_s = $this->cliente->get($this->clientedefault);//cargo el cliente por defecto que en mi caso es cliente de contado con codcliente 000001 si no tienes cliente por defecto pon false
       $this->familia = new familia();
       $this->impuesto = new impuesto();
       $this->carga_proveedores();
@@ -98,6 +102,98 @@ class tpvmod extends fs_controller
       }
       else
       {
+         if( isset($_GET['edita']) )
+         {
+             if($_GET['id'])
+             {
+                 $this->id_documento=$_GET['id'];
+                 
+                 if($_GET['edita']=="albaran")
+                 {
+                     $this->vienede="albaran";
+                     $this->template="tpvmodalbaran";
+                     $albaran=new albaran_cliente();
+                     $this->documento = $albaran->get($_GET['id']);
+                     if($this->documento)
+                      {
+                         $this->page->title = $this->documento->codigo;
+
+                         /// cargamos el cliente
+                         $this->cliente_s = $this->cliente->get($this->documento->codcliente);
+
+                         /// comprobamos el presupuesto
+                         $this->documento->full_test();
+                      }
+                      else
+                         $this->new_error_msg("¡".FS_ALBARAN." de cliente no encontrado!");
+                 }
+                 elseif($_GET['edita']=="presupuesto")
+                 {
+                     $this->vienede="presupuesto";
+                     $this->template="tpvmodpresupuesto";
+                     $presupuesto=new presupuesto_cliente();
+                     $this->documento = $presupuesto->get($_GET['id']);
+                     if($this->documento)
+                      {
+                         $this->page->title = $this->documento->codigo;
+
+                         /// cargamos el cliente
+                         $this->cliente_s = $this->cliente->get($this->documento->codcliente);
+
+                         /// comprobamos el albarán
+                         $this->documento->full_test();
+                      }
+                      else
+                         $this->new_error_msg("¡".FS_ALBARAN." de cliente no encontrado!");
+                 }
+                 elseif($_GET['edita']=="pedido")
+                 {
+                     $this->vienede="pedido";
+                     $this->template="tpvmodpedido";
+                     $pedido=new pedido_cliente();
+                     $this->documento = $pedido->get($_GET['id']);
+                     if($this->documento)
+                      {
+                         $this->page->title = $this->documento->codigo;
+
+                         /// cargamos el cliente
+                         $this->cliente_s = $this->cliente->get($this->documento->codcliente);
+
+                         /// comprobamos el albarán
+                         $this->documento->full_test();
+                      }
+                      else
+                         $this->new_error_msg("¡".FS_PRESUPUESTO." de cliente no encontrado!");
+                 }
+                 elseif($_GET['edita']=="factura")
+                 {
+                     $this->vienede="factura";
+                     $this->template="tpvmodfactura";
+                     $factura=new factura_cliente();
+                     $this->documento = $factura->get($_GET['id']);
+                     if($this->documento)
+                      {
+                         $this->page->title = $this->documento->codigo;
+
+                         /// cargamos el cliente
+                         $this->cliente_s = $this->cliente->get($this->documento->codcliente);
+
+                         /// comprobamos el albarán
+                         $this->documento->full_test();
+                      }
+                      else
+                         $this->new_error_msg("¡".FS_PRESUPUESTO." de cliente no encontrado!");
+                 }
+                 else
+                 {
+                     $this->new_error_msg("No se ha pasado ningun id en el factura");
+                 }
+             }
+             else 
+             {
+                $this->cliente_s = $this->cliente->get($this->clientedefault); 
+             }
+         }
          $this->agente = $this->user->get_agente();
          $this->almacen = new almacen();
          $this->divisa = new divisa();
@@ -174,7 +270,7 @@ class tpvmod extends fs_controller
             
             if($this->caja)
             {
-               if( isset($_POST['cliente']) )
+               /*if( isset($_POST['cliente']) )
                {
                   $this->cliente_s = $this->cliente->get($_POST['cliente']);
                }
@@ -190,7 +286,7 @@ class tpvmod extends fs_controller
                      $this->cliente_s = $cli;
                      break;
                   }
-               }
+               }*/
                
                if( isset($_GET['abrir_caja']) )
                {
@@ -221,6 +317,22 @@ class tpvmod extends fs_controller
                             else if($_POST['tipo'] == 'factura')
                             {
                                 $this->nueva_factura_cliente();
+                            }
+                            else if($_POST['tipo'] == 'guardar_albaran')
+                            {
+                                $this->edita_albaran_cliente();
+                            }
+                            else if($_POST['tipo'] == 'guardar_presupuesto')
+                            {
+                                $this->edita_presupuesto_cliente();
+                            }
+                            else if($_POST['tipo'] == 'guardar_pedido')
+                            {
+                                $this->edita_pedido_cliente();
+                            }
+                            else if($_POST['tipo'] == 'guardar_factura')
+                            {
+                                $this->edita_factura_cliente();
                             }
          		}
                   }
@@ -615,9 +727,9 @@ class tpvmod extends fs_controller
                
 					if( $presupuesto->save() )
                {
-                  $this->new_message("<a href='".$presupuesto->url()."'>".ucfirst(FS_PRESUPUESTO)."</a> guardado correctamente. <a href='index.php?page=imprimir_presu_pedi&presupuesto=TRUE&id=".$presupuesto->idpresupuesto."'>Imprimir</a>");
+                  $this->new_message("<a href='page=tpvmod&edita=presupuesto&id=".$presupuesto->idpresupuesto."'>".ucfirst(FS_PRESUPUESTO)."</a> guardado correctamente. <a href='index.php?page=imprimir_presu_pedi&presupuesto=TRUE&id=".$presupuesto->idpresupuesto."'>Imprimir</a>");
                   $this->new_change(ucfirst(FS_PRESUPUESTO).' a Cliente '.$presupuesto->codigo, $presupuesto->url(), TRUE);
-				  $this->cliente_s = $this->cliente->get("000001");//reseteo el cliente
+				  $this->cliente_s = $this->cliente->get($this->clientedefault);//reseteo el cliente
                }
                else
                   $this->new_error_msg("¡Imposible actualizar el <a href='".$presupuesto->url()."'>".FS_PRESUPUESTO."</a>!");
@@ -805,7 +917,7 @@ class tpvmod extends fs_controller
                {
                   $this->new_message("<a href='".$factura->url()."'>Factura</a> guardada correctamente. <a  href='index.php?page=factura_detallada&id=".$factura->idfactura."'>Imprimir</a>");
                   $this->new_change('Factura Cliente '.$factura->codigo, $factura->url(), TRUE);
-		  $this->cliente_s = $this->cliente->get("000001");
+		  $this->cliente_s = $this->cliente->get($this->clientedefault);
                }
                else
                   $this->new_error_msg("¡Imposible actualizar la <a href='".$factura->url()."'>Factura</a>!");
@@ -990,7 +1102,7 @@ class tpvmod extends fs_controller
                
                 if( $pedido->save() )
                {
-                  $this->new_message("<a href='".$pedido->url()."'>".ucfirst(FS_PEDIDO)."</a> guardado correctamente. <a href='index.php?page=imprimir_presu_pedi&pedido=TRUE&id=".$pedido->idpedido."'>Imprimir</a>");
+                  $this->new_message("<a href='page=tpvmod&edita=pedido&id=".$pedido->idpedido."'>".ucfirst(FS_PEDIDO)."</a> guardado correctamente. <a href='index.php?page=imprimir_presu_pedi&pedido=TRUE&id=".$pedido->idpedido."'>Imprimir</a>");
                   $this->new_change(ucfirst(FS_PEDIDO)." a Cliente ".$pedido->codigo, $pedido->url(), TRUE);
                }
                else
@@ -1103,13 +1215,13 @@ class tpvmod extends fs_controller
          $albaran->irpf = $serie->irpf;
          $albaran->porcomision = $this->agente->porcomision;
          
-         foreach($this->cliente_s->get_direcciones() as $d)
+         foreach($cliente->get_direcciones() as $d)
          {
             if($d->domfacturacion)
             {
-               $albaran->codcliente = $this->cliente_s->codcliente;
-               $albaran->cifnif = $this->cliente_s->cifnif;
-               $albaran->nombrecliente = $this->cliente_s->razonsocial;
+               $albaran->codcliente = $cliente->codcliente;
+               $albaran->cifnif = $cliente->cifnif;
+               $albaran->nombrecliente = $cliente->razonsocial;
                $albaran->apartado = $d->apartado;
                $albaran->ciudad = $d->ciudad;
                $albaran->coddir = $d->id;
@@ -1203,10 +1315,9 @@ class tpvmod extends fs_controller
                }
                else if( $albaran->save() )
                {
-                  $this->new_message("<a href='".$albaran->url()."'>".FS_ALBARAN."</a> guardado correctamente. <a  href='index.php?page=ventas_imprimir&albaran=TRUE&id=".$albaran->idalbaran."'>Imprimir</a>");
-				  $this->cliente_s = $this->cliente->get("000001");
+                  $this->new_message("<a href='./index.php?page=tpvmod&edita=albaran&id=".$albaran->idalbaran."'>".FS_ALBARAN."</a> guardado correctamente. <a  href='index.php?page=ventas_imprimir&albaran=TRUE&id=".$albaran->idalbaran."'>Imprimir</a>");
+	          $this->cliente_s = $this->cliente->get($this->clientedefault);
                   
-                  $this->imprimir_ticket( $albaran, floatval($_POST['num_tickets']) );
                   
                   /// actualizamos la caja
                   $this->caja->dinero_fin += $albaran->total;
@@ -1232,6 +1343,1180 @@ class tpvmod extends fs_controller
       }
    }
    
+      private function edita_albaran_cliente()
+   {
+      $continuar = TRUE;
+      $this->cliente_s = $this->cliente->get($_POST['cliente']);
+      if( !$this->cliente_s)
+      {
+         $this->new_error_msg('Cliente no encontrado.');
+         $continuar = FALSE;
+      }
+      $almacen = $this->almacen->get($_POST['almacen']);
+      if( $almacen )
+         $this->save_codalmacen( $almacen->codalmacen );
+      else
+      {
+         $this->new_error_msg('Almacén no encontrado.');
+         $continuar = FALSE;
+      }
+      
+      $ejercicio = $this->ejercicio->get_by_fecha($_POST['fecha']);
+      if( !$ejercicio )
+      {
+         $this->new_error_msg('Ejercicio no encontrado.');
+         $continuar = FALSE;
+      }
+      
+      $serie = $this->serie->get($_POST['serie']);
+      if( !$serie )
+      {
+         $this->new_error_msg('Serie no encontrada.');
+         $continuar = FALSE;
+      }
+      
+      $forma_pago = $this->forma_pago->get($_POST['forma_pago']);
+      if( $forma_pago )
+         $this->save_codpago( $forma_pago->codpago );
+      else
+      {
+         $this->new_error_msg('Forma de pago no encontrada.');
+         $continuar = FALSE;
+      }
+      
+      $divisa = $this->divisa->get($_POST['divisa']);
+      if( !$divisa )
+      {
+         $this->new_error_msg('Divisa no encontrada.');
+         $continuar = FALSE;
+      }
+      
+      if( isset($_POST['imprimir_desc']) )
+      {
+         $this->imprimir_descripciones = TRUE;
+         setcookie('imprimir_desc', TRUE, time()+FS_COOKIES_EXPIRE);
+      }
+      else
+      {
+         $this->imprimir_descripciones = FALSE;
+         setcookie('imprimir_desc', FALSE, time()-FS_COOKIES_EXPIRE);
+      }
+      
+      if( isset($_POST['imprimir_obs']) )
+      {
+         $this->imprimir_observaciones = TRUE;
+         setcookie('imprimir_obs', TRUE, time()+FS_COOKIES_EXPIRE);
+      }
+      else
+      {
+         $this->imprimir_observaciones = FALSE;
+         setcookie('imprimir_obs', FALSE, time()-FS_COOKIES_EXPIRE);
+      }
+      
+      $albaran = new albaran_cliente();
+      $albaran = $albaran->get($_POST['id']);
+      
+      
+      if( $continuar )
+      {
+         $albaran->fecha = $_POST['fecha'];
+         $albaran->codalmacen = $almacen->codalmacen;
+         $albaran->codejercicio = $ejercicio->codejercicio;
+         $albaran->codserie = $serie->codserie;
+         $albaran->codpago = $forma_pago->codpago;
+         $albaran->coddivisa = $divisa->coddivisa;
+         $albaran->tasaconv = $divisa->tasaconv;
+         $albaran->codagente = $this->agente->codagente;
+         $albaran->observaciones = $_POST['observaciones'];
+         $albaran->numero2 = $_POST['numero2'];
+         $albaran->irpf = $serie->irpf;
+         $albaran->porcomision = $this->agente->porcomision;
+         
+         foreach($this->cliente_s->get_direcciones() as $d)
+         {
+            if($d->domfacturacion)
+            {
+               $albaran->codcliente = $this->cliente_s->codcliente;
+               $albaran->cifnif = $this->cliente_s->cifnif;
+               $albaran->nombrecliente = $this->cliente_s->razonsocial;
+               $albaran->apartado = $d->apartado;
+               $albaran->ciudad = $d->ciudad;
+               $albaran->coddir = $d->id;
+               $albaran->codpais = $d->codpais;
+               $albaran->codpostal = $d->codpostal;
+               $albaran->direccion = $d->direccion;
+               $albaran->provincia = $d->provincia;
+               break;
+            }
+         }
+            if( isset($_POST['numlineas']) )
+             {
+                $numlineas = intval($_POST['numlineas']);
+
+                $albaran->neto = 0;
+                $albaran->totaliva = 0;
+                $albaran->totalirpf = 0;
+                $albaran->totalrecargo = 0;
+                $lineas = $albaran->get_lineas();
+                $articulo = new articulo();
+
+                /// eliminamos las líneas que no encontremos en el $_POST
+                foreach($lineas as $l)
+                {
+                   $encontrada = FALSE;
+                   for($num = 0; $num <= $numlineas; $num++)
+                   {
+                      if( isset($_POST['idlinea_'.$num]) )
+                      {
+                         if($l->idlinea == intval($_POST['idlinea_'.$num]))
+                         {
+                            $encontrada = TRUE;
+                            break;
+                         }
+                      }
+                   }
+                   if( !$encontrada )
+                   {
+                      if( $l->delete() )
+                      {
+                         /// actualizamos el stock
+                         $art0 = $articulo->get($l->referencia);
+                         if($art0)
+                            $art0->sum_stock($albaran->codalmacen, $l->cantidad);
+                      }
+                      else
+                         $this->new_error_msg("¡Imposible eliminar la línea del artículo ".$l->referencia."!");
+                   }
+                }
+
+                /// modificamos y/o añadimos las demás líneas
+                for($num = 0; $num <= $numlineas; $num++)
+                {
+                   $encontrada = FALSE;
+                   if( isset($_POST['idlinea_'.$num]) )
+                   {
+                      foreach($lineas as $k => $value)
+                      {
+                         /// modificamos la línea
+                         if($value->idlinea == intval($_POST['idlinea_'.$num]))
+                         {
+                            
+                            $encontrada = TRUE;
+                            $cantidad_old = $value->cantidad;
+                            $lineas[$k]->cantidad = floatval($_POST['cantidad_'.$num]);
+                            $lineas[$k]->pvpunitario = floatval($_POST['pvp_'.$num]);
+                            $lineas[$k]->dtopor = floatval($_POST['dto_'.$num]);
+                            $lineas[$k]->pvpsindto = ($value->cantidad * $value->pvpunitario);
+                            $lineas[$k]->pvptotal = ($value->cantidad * $value->pvpunitario * (100 - $value->dtopor)/100);
+                            $lineas[$k]->descripcion = $_POST['desc_'.$num];
+
+                            $lineas[$k]->codimpuesto = NULL;
+                            $lineas[$k]->iva = 0;
+                            $lineas[$k]->recargo = 0;
+                            $lineas[$k]->irpf = floatval($_POST['irpf_'.$num]);
+                            if( !$serie->siniva AND $this->cliente_s->regimeniva != 'Exento' )
+                            {
+                               $imp0 = $this->impuesto->get_by_iva($_POST['iva_'.$num]);
+                               if($imp0)
+                                  $lineas[$k]->codimpuesto = $imp0->codimpuesto;
+
+                               $lineas[$k]->iva = floatval($_POST['iva_'.$num]);
+                               $lineas[$k]->recargo = floatval($_POST['recargo_'.$num]);
+                            }
+
+                            if( $lineas[$k]->save() )
+                            {
+                               $albaran->neto += $value->pvptotal;
+                               $albaran->totaliva += $value->pvptotal * $value->iva/100;
+                               $albaran->totalirpf += $value->pvptotal * $value->irpf/100;
+                               $albaran->totalrecargo += $value->pvptotal * $value->recargo/100;
+
+                               if($lineas[$k]->cantidad != $cantidad_old)
+                               {
+                                  /// actualizamos el stock
+                                  $art0 = $articulo->get($value->referencia);
+                                  if($art0)
+                                     $art0->sum_stock($albaran->codalmacen, $cantidad_old - $lineas[$k]->cantidad);
+                               }
+                            }
+                            else
+                               $this->new_error_msg("¡Imposible modificar la línea del artículo ".$value->referencia."!");
+                            break;
+                         }
+                      }
+
+                      /// añadimos la línea
+                      if(!$encontrada AND intval($_POST['idlinea_'.$num]) == -1 AND isset($_POST['referencia_'.$num]))
+                      {
+                         $linea = new linea_albaran_cliente();
+                         $linea->idalbaran = $albaran->idalbaran;
+                         $linea->descripcion = $_POST['desc_'.$num];
+
+                         if( !$serie->siniva AND $this->cliente_s->regimeniva != 'Exento' )
+                         {
+                            $imp0 = $this->impuesto->get_by_iva($_POST['iva_'.$num]);
+                            if($imp0)
+                               $linea->codimpuesto = $imp0->codimpuesto;
+
+                            $linea->iva = floatval($_POST['iva_'.$num]);
+                            $linea->recargo = floatval($_POST['recargo_'.$num]);
+                         }
+
+                         $linea->irpf = floatval($_POST['irpf_'.$num]);
+                         $linea->cantidad = floatval($_POST['cantidad_'.$num]);
+                         $linea->pvpunitario = floatval($_POST['pvp_'.$num]);
+                         $linea->dtopor = floatval($_POST['dto_'.$num]);
+                         $linea->pvpsindto = ($linea->cantidad * $linea->pvpunitario);
+                         $linea->pvptotal = ($linea->cantidad * $linea->pvpunitario * (100 - $linea->dtopor)/100);
+
+                         $art0 = $articulo->get( $_POST['referencia_'.$num] );
+                         if($art0)
+                         {
+                            $linea->referencia = $art0->referencia;
+                         }
+
+                         if( $linea->save() )
+                         {
+                            if($art0)
+                            {
+                               /// actualizamos el stock
+                               $art0->sum_stock($albaran->codalmacen, 0 - $linea->cantidad);
+                            }
+
+                            $albaran->neto += $linea->pvptotal;
+                            $albaran->totaliva += $linea->pvptotal * $linea->iva/100;
+                            $albaran->totalirpf += $linea->pvptotal * $linea->irpf/100;
+                            $albaran->totalrecargo += $linea->pvptotal * $linea->recargo/100;
+                         }
+                         else
+                            $this->new_error_msg("¡Imposible guardar la línea del artículo ".$linea->referencia."!");
+                      }
+                   }
+                }
+
+                
+             }
+                  
+
+            
+            if($continuar)
+            {
+               /// redondeamos
+               $albaran->neto = round($albaran->neto, FS_NF0);
+               $albaran->totaliva = round($albaran->totaliva, FS_NF0);
+               $albaran->totalirpf = round($albaran->totalirpf, FS_NF0);
+               $albaran->totalrecargo = round($albaran->totalrecargo, FS_NF0);
+               $albaran->total = $albaran->neto + $albaran->totaliva - $albaran->totalirpf + $albaran->totalrecargo;
+               
+               if( $albaran->save() )
+               {
+                  $this->new_message("<a href='./index.php?page=tpvmod&edita=albaran&id=".$albaran->idalbaran."'>".FS_ALBARAN."</a> guardado correctamente. <a  href='index.php?page=ventas_imprimir&albaran=TRUE&id=".$albaran->idalbaran."'>Imprimir</a>");
+				  
+                  
+                  
+                  /// actualizamos la caja
+                  $this->caja->dinero_fin += $albaran->total;
+                  $this->caja->tickets += 1;
+                  $this->caja->ip = $_SERVER['REMOTE_ADDR'];
+                  if( !$this->caja->save() )
+                  {
+                     $this->new_error_msg("¡Imposible actualizar la caja!");
+                  }
+               }
+               else
+                  $this->new_error_msg("¡Imposible actualizar el <a href='".$albaran->url()."'>".FS_ALBARAN."</a>!");
+            }
+            else if( $albaran->delete() )
+            {
+               $this->new_message(FS_ALBARAN." eliminado correctamente.");
+            }
+            else
+               $this->new_error_msg("¡Imposible eliminar el <a href='".$albaran->url()."'>".FS_ALBARAN."</a>!");
+      }
+      $this->cliente_s = $this->cliente->get($this->clientedefault);
+   }
+   
+   private function edita_pedido_cliente()
+   {
+      $continuar = TRUE;
+      $this->cliente_s = $this->cliente->get($_POST['cliente']);
+      if( !$this->cliente_s)
+      {
+         $this->new_error_msg('Cliente no encontrado.');
+         $continuar = FALSE;
+      }
+      $almacen = $this->almacen->get($_POST['almacen']);
+      if( $almacen )
+         $this->save_codalmacen( $almacen->codalmacen );
+      else
+      {
+         $this->new_error_msg('Almacén no encontrado.');
+         $continuar = FALSE;
+      }
+      
+      $ejercicio = $this->ejercicio->get_by_fecha($_POST['fecha']);
+      if( !$ejercicio )
+      {
+         $this->new_error_msg('Ejercicio no encontrado.');
+         $continuar = FALSE;
+      }
+      
+      $serie = $this->serie->get($_POST['serie']);
+      if( !$serie )
+      {
+         $this->new_error_msg('Serie no encontrada.');
+         $continuar = FALSE;
+      }
+      
+      $forma_pago = $this->forma_pago->get($_POST['forma_pago']);
+      if( $forma_pago )
+         $this->save_codpago( $forma_pago->codpago );
+      else
+      {
+         $this->new_error_msg('Forma de pago no encontrada.');
+         $continuar = FALSE;
+      }
+      
+      $divisa = $this->divisa->get($_POST['divisa']);
+      if( !$divisa )
+      {
+         $this->new_error_msg('Divisa no encontrada.');
+         $continuar = FALSE;
+      }
+      
+      if( isset($_POST['imprimir_desc']) )
+      {
+         $this->imprimir_descripciones = TRUE;
+         setcookie('imprimir_desc', TRUE, time()+FS_COOKIES_EXPIRE);
+      }
+      else
+      {
+         $this->imprimir_descripciones = FALSE;
+         setcookie('imprimir_desc', FALSE, time()-FS_COOKIES_EXPIRE);
+      }
+      
+      if( isset($_POST['imprimir_obs']) )
+      {
+         $this->imprimir_observaciones = TRUE;
+         setcookie('imprimir_obs', TRUE, time()+FS_COOKIES_EXPIRE);
+      }
+      else
+      {
+         $this->imprimir_observaciones = FALSE;
+         setcookie('imprimir_obs', FALSE, time()-FS_COOKIES_EXPIRE);
+      }
+      
+      $pedido = new pedido_cliente();
+      $pedido = $pedido->get($_POST['id']);
+      
+      
+      if( $continuar )
+      {
+         $pedido->fecha = $_POST['fecha'];
+         $pedido->codalmacen = $almacen->codalmacen;
+         $pedido->codejercicio = $ejercicio->codejercicio;
+         $pedido->codserie = $serie->codserie;
+         $pedido->codpago = $forma_pago->codpago;
+         $pedido->coddivisa = $divisa->coddivisa;
+         $pedido->tasaconv = $divisa->tasaconv;
+         $pedido->codagente = $this->agente->codagente;
+         $pedido->observaciones = $_POST['observaciones'];
+         $pedido->numero2 = $_POST['numero2'];
+         $pedido->irpf = $serie->irpf;
+         $pedido->porcomision = $this->agente->porcomision;
+         
+         foreach($this->cliente_s->get_direcciones() as $d)
+         {
+            if($d->domfacturacion)
+            {
+               $pedido->codcliente = $this->cliente_s->codcliente;
+               $pedido->cifnif = $this->cliente_s->cifnif;
+               $pedido->nombrecliente = $this->cliente_s->razonsocial;
+               $pedido->apartado = $d->apartado;
+               $pedido->ciudad = $d->ciudad;
+               $pedido->coddir = $d->id;
+               $pedido->codpais = $d->codpais;
+               $pedido->codpostal = $d->codpostal;
+               $pedido->direccion = $d->direccion;
+               $pedido->provincia = $d->provincia;
+               break;
+            }
+         }
+            if( isset($_POST['numlineas']) )
+             {
+                $numlineas = intval($_POST['numlineas']);
+
+                $pedido->neto = 0;
+                $pedido->totaliva = 0;
+                $pedido->totalirpf = 0;
+                $pedido->totalrecargo = 0;
+                $lineas = $pedido->get_lineas();
+                $articulo = new articulo();
+
+                /// eliminamos las líneas que no encontremos en el $_POST
+                foreach($lineas as $l)
+                {
+                   $encontrada = FALSE;
+                   for($num = 0; $num <= $numlineas; $num++)
+                   {
+                      if( isset($_POST['idlinea_'.$num]) )
+                      {
+                         if($l->idlinea == intval($_POST['idlinea_'.$num]))
+                         {
+                            $encontrada = TRUE;
+                            break;
+                         }
+                      }
+                   }
+                   if( !$encontrada )
+                   {
+                      if( $l->delete() )
+                      {
+                         /// actualizamos el stock
+                         $art0 = $articulo->get($l->referencia);
+                         if($art0)
+                            $art0->sum_stock($pedido->codalmacen, $l->cantidad);
+                      }
+                      else
+                         $this->new_error_msg("¡Imposible eliminar la línea del artículo ".$l->referencia."!");
+                   }
+                }
+
+                /// modificamos y/o añadimos las demás líneas
+                for($num = 0; $num <= $numlineas; $num++)
+                {
+                   $encontrada = FALSE;
+                   if( isset($_POST['idlinea_'.$num]) )
+                   {
+                      foreach($lineas as $k => $value)
+                      {
+                         /// modificamos la línea
+                         if($value->idlinea == intval($_POST['idlinea_'.$num]))
+                         {
+                            
+                            $encontrada = TRUE;
+                            $cantidad_old = $value->cantidad;
+                            $lineas[$k]->cantidad = floatval($_POST['cantidad_'.$num]);
+                            $lineas[$k]->pvpunitario = floatval($_POST['pvp_'.$num]);
+                            $lineas[$k]->dtopor = floatval($_POST['dto_'.$num]);
+                            $lineas[$k]->pvpsindto = ($value->cantidad * $value->pvpunitario);
+                            $lineas[$k]->pvptotal = ($value->cantidad * $value->pvpunitario * (100 - $value->dtopor)/100);
+                            $lineas[$k]->descripcion = $_POST['desc_'.$num];
+
+                            $lineas[$k]->codimpuesto = NULL;
+                            $lineas[$k]->iva = 0;
+                            $lineas[$k]->recargo = 0;
+                            $lineas[$k]->irpf = floatval($_POST['irpf_'.$num]);
+                            if( !$serie->siniva AND $this->cliente_s->regimeniva != 'Exento' )
+                            {
+                               $imp0 = $this->impuesto->get_by_iva($_POST['iva_'.$num]);
+                               if($imp0)
+                                  $lineas[$k]->codimpuesto = $imp0->codimpuesto;
+
+                               $lineas[$k]->iva = floatval($_POST['iva_'.$num]);
+                               $lineas[$k]->recargo = floatval($_POST['recargo_'.$num]);
+                            }
+
+                            if( $lineas[$k]->save() )
+                            {
+                               $pedido->neto += $value->pvptotal;
+                               $pedido->totaliva += $value->pvptotal * $value->iva/100;
+                               $pedido->totalirpf += $value->pvptotal * $value->irpf/100;
+                               $pedido->totalrecargo += $value->pvptotal * $value->recargo/100;
+
+                               if($lineas[$k]->cantidad != $cantidad_old)
+                               {
+                                  /// actualizamos el stock
+                                  $art0 = $articulo->get($value->referencia);
+                                  if($art0)
+                                     $art0->sum_stock($pedido->codalmacen, $cantidad_old - $lineas[$k]->cantidad);
+                               }
+                            }
+                            else
+                               $this->new_error_msg("¡Imposible modificar la línea del artículo ".$value->referencia."!");
+                            break;
+                         }
+                      }
+
+                      /// añadimos la línea
+                      if(!$encontrada AND intval($_POST['idlinea_'.$num]) == -1 AND isset($_POST['referencia_'.$num]))
+                      {
+                         $linea = new linea_pedido_cliente();
+                         $linea->idpedido = $pedido->idpedido;
+                         $linea->descripcion = $_POST['desc_'.$num];
+
+                         if( !$serie->siniva AND $this->cliente_s->regimeniva != 'Exento' )
+                         {
+                            $imp0 = $this->impuesto->get_by_iva($_POST['iva_'.$num]);
+                            if($imp0)
+                               $linea->codimpuesto = $imp0->codimpuesto;
+
+                            $linea->iva = floatval($_POST['iva_'.$num]);
+                            $linea->recargo = floatval($_POST['recargo_'.$num]);
+                         }
+
+                         $linea->irpf = floatval($_POST['irpf_'.$num]);
+                         $linea->cantidad = floatval($_POST['cantidad_'.$num]);
+                         $linea->pvpunitario = floatval($_POST['pvp_'.$num]);
+                         $linea->dtopor = floatval($_POST['dto_'.$num]);
+                         $linea->pvpsindto = ($linea->cantidad * $linea->pvpunitario);
+                         $linea->pvptotal = ($linea->cantidad * $linea->pvpunitario * (100 - $linea->dtopor)/100);
+
+                         $art0 = $articulo->get( $_POST['referencia_'.$num] );
+                         if($art0)
+                         {
+                            $linea->referencia = $art0->referencia;
+                         }
+
+                         if( $linea->save() )
+                         {
+                            if($art0)
+                            {
+                               /// actualizamos el stock
+                               $art0->sum_stock($pedido->codalmacen, 0 - $linea->cantidad);
+                            }
+
+                            $pedido->neto += $linea->pvptotal;
+                            $pedido->totaliva += $linea->pvptotal * $linea->iva/100;
+                            $pedido->totalirpf += $linea->pvptotal * $linea->irpf/100;
+                            $pedido->totalrecargo += $linea->pvptotal * $linea->recargo/100;
+                         }
+                         else
+                            $this->new_error_msg("¡Imposible guardar la línea del artículo ".$linea->referencia."!");
+                      }
+                   }
+                }
+
+                
+             }
+                  
+
+            
+            if($continuar)
+            {
+               /// redondeamos
+               $pedido->neto = round($pedido->neto, FS_NF0);
+               $pedido->totaliva = round($pedido->totaliva, FS_NF0);
+               $pedido->totalirpf = round($pedido->totalirpf, FS_NF0);
+               $pedido->totalrecargo = round($pedido->totalrecargo, FS_NF0);
+               $pedido->total = $pedido->neto + $pedido->totaliva - $pedido->totalirpf + $pedido->totalrecargo;
+               
+               if( $pedido->save() )
+               {
+                  $this->new_message("<a href='./index.php?page=tpvmod&edita=pedido&id=".$pedido->idpedido."'>".FS_ALBARAN."</a> guardado correctamente. <a  href='index.php?page=ventas_imprimir&pedido=TRUE&id=".$pedido->idpedido."'>Imprimir</a>");
+				  
+                  
+                  
+                  /// actualizamos la caja
+                  $this->caja->dinero_fin += $pedido->total;
+                  $this->caja->tickets += 1;
+                  $this->caja->ip = $_SERVER['REMOTE_ADDR'];
+                  if( !$this->caja->save() )
+                  {
+                     $this->new_error_msg("¡Imposible actualizar la caja!");
+                  }
+               }
+               else
+                  $this->new_error_msg("¡Imposible actualizar el <a href='".$pedido->url()."'>".FS_ALBARAN."</a>!");
+            }
+            else if( $pedido->delete() )
+            {
+               $this->new_message(FS_ALBARAN." eliminado correctamente.");
+            }
+            else
+               $this->new_error_msg("¡Imposible eliminar el <a href='".$pedido->url()."'>".FS_ALBARAN."</a>!");
+      }
+      $this->cliente_s = $this->cliente->get($this->clientedefault);
+   }
+   
+   
+   private function edita_presupuesto_cliente()
+   {
+      $continuar = TRUE;
+      $this->cliente_s = $this->cliente->get($_POST['cliente']);
+      if( !$this->cliente_s)
+      {
+         $this->new_error_msg('Cliente no encontrado.');
+         $continuar = FALSE;
+      }
+      $almacen = $this->almacen->get($_POST['almacen']);
+      if( $almacen )
+         $this->save_codalmacen( $almacen->codalmacen );
+      else
+      {
+         $this->new_error_msg('Almacén no encontrado.');
+         $continuar = FALSE;
+      }
+      
+      $ejercicio = $this->ejercicio->get_by_fecha($_POST['fecha']);
+      if( !$ejercicio )
+      {
+         $this->new_error_msg('Ejercicio no encontrado.');
+         $continuar = FALSE;
+      }
+      
+      $serie = $this->serie->get($_POST['serie']);
+      if( !$serie )
+      {
+         $this->new_error_msg('Serie no encontrada.');
+         $continuar = FALSE;
+      }
+      
+      $forma_pago = $this->forma_pago->get($_POST['forma_pago']);
+      if( $forma_pago )
+         $this->save_codpago( $forma_pago->codpago );
+      else
+      {
+         $this->new_error_msg('Forma de pago no encontrada.');
+         $continuar = FALSE;
+      }
+      
+      $divisa = $this->divisa->get($_POST['divisa']);
+      if( !$divisa )
+      {
+         $this->new_error_msg('Divisa no encontrada.');
+         $continuar = FALSE;
+      }
+      
+      if( isset($_POST['imprimir_desc']) )
+      {
+         $this->imprimir_descripciones = TRUE;
+         setcookie('imprimir_desc', TRUE, time()+FS_COOKIES_EXPIRE);
+      }
+      else
+      {
+         $this->imprimir_descripciones = FALSE;
+         setcookie('imprimir_desc', FALSE, time()-FS_COOKIES_EXPIRE);
+      }
+      
+      if( isset($_POST['imprimir_obs']) )
+      {
+         $this->imprimir_observaciones = TRUE;
+         setcookie('imprimir_obs', TRUE, time()+FS_COOKIES_EXPIRE);
+      }
+      else
+      {
+         $this->imprimir_observaciones = FALSE;
+         setcookie('imprimir_obs', FALSE, time()-FS_COOKIES_EXPIRE);
+      }
+      
+      $presupuesto = new presupuesto_cliente();
+      $presupuesto = $presupuesto->get($_POST['id']);
+      
+      
+      if( $continuar )
+      {
+         $presupuesto->fecha = $_POST['fecha'];
+         $presupuesto->codalmacen = $almacen->codalmacen;
+         $presupuesto->codejercicio = $ejercicio->codejercicio;
+         $presupuesto->codserie = $serie->codserie;
+         $presupuesto->codpago = $forma_pago->codpago;
+         $presupuesto->coddivisa = $divisa->coddivisa;
+         $presupuesto->tasaconv = $divisa->tasaconv;
+         $presupuesto->codagente = $this->agente->codagente;
+         $presupuesto->observaciones = $_POST['observaciones'];
+         $presupuesto->numero2 = $_POST['numero2'];
+         $presupuesto->irpf = $serie->irpf;
+         $presupuesto->porcomision = $this->agente->porcomision;
+         
+         foreach($this->cliente_s->get_direcciones() as $d)
+         {
+            if($d->domfacturacion)
+            {
+               $presupuesto->codcliente = $this->cliente_s->codcliente;
+               $presupuesto->cifnif = $this->cliente_s->cifnif;
+               $presupuesto->nombrecliente = $this->cliente_s->razonsocial;
+               $presupuesto->apartado = $d->apartado;
+               $presupuesto->ciudad = $d->ciudad;
+               $presupuesto->coddir = $d->id;
+               $presupuesto->codpais = $d->codpais;
+               $presupuesto->codpostal = $d->codpostal;
+               $presupuesto->direccion = $d->direccion;
+               $presupuesto->provincia = $d->provincia;
+               break;
+            }
+         }
+            if( isset($_POST['numlineas']) )
+             {
+                $numlineas = intval($_POST['numlineas']);
+
+                $presupuesto->neto = 0;
+                $presupuesto->totaliva = 0;
+                $presupuesto->totalirpf = 0;
+                $presupuesto->totalrecargo = 0;
+                $lineas = $presupuesto->get_lineas();
+                $articulo = new articulo();
+
+                /// eliminamos las líneas que no encontremos en el $_POST
+                foreach($lineas as $l)
+                {
+                   $encontrada = FALSE;
+                   for($num = 0; $num <= $numlineas; $num++)
+                   {
+                      if( isset($_POST['idlinea_'.$num]) )
+                      {
+                         if($l->idlinea == intval($_POST['idlinea_'.$num]))
+                         {
+                            $encontrada = TRUE;
+                            break;
+                         }
+                      }
+                   }
+                   if( !$encontrada )
+                   {
+                      if( $l->delete() )
+                      {
+                         /// actualizamos el stock
+                         $art0 = $articulo->get($l->referencia);
+                         if($art0)
+                            $art0->sum_stock($presupuesto->codalmacen, $l->cantidad);
+                      }
+                      else
+                         $this->new_error_msg("¡Imposible eliminar la línea del artículo ".$l->referencia."!");
+                   }
+                }
+
+                /// modificamos y/o añadimos las demás líneas
+                for($num = 0; $num <= $numlineas; $num++)
+                {
+                   $encontrada = FALSE;
+                   if( isset($_POST['idlinea_'.$num]) )
+                   {
+                      foreach($lineas as $k => $value)
+                      {
+                         /// modificamos la línea
+                         if($value->idlinea == intval($_POST['idlinea_'.$num]))
+                         {
+                            
+                            $encontrada = TRUE;
+                            $cantidad_old = $value->cantidad;
+                            $lineas[$k]->cantidad = floatval($_POST['cantidad_'.$num]);
+                            $lineas[$k]->pvpunitario = floatval($_POST['pvp_'.$num]);
+                            $lineas[$k]->dtopor = floatval($_POST['dto_'.$num]);
+                            $lineas[$k]->pvpsindto = ($value->cantidad * $value->pvpunitario);
+                            $lineas[$k]->pvptotal = ($value->cantidad * $value->pvpunitario * (100 - $value->dtopor)/100);
+                            $lineas[$k]->descripcion = $_POST['desc_'.$num];
+
+                            $lineas[$k]->codimpuesto = NULL;
+                            $lineas[$k]->iva = 0;
+                            $lineas[$k]->recargo = 0;
+                            $lineas[$k]->irpf = floatval($_POST['irpf_'.$num]);
+                            if( !$serie->siniva AND $this->cliente_s->regimeniva != 'Exento' )
+                            {
+                               $imp0 = $this->impuesto->get_by_iva($_POST['iva_'.$num]);
+                               if($imp0)
+                                  $lineas[$k]->codimpuesto = $imp0->codimpuesto;
+
+                               $lineas[$k]->iva = floatval($_POST['iva_'.$num]);
+                               $lineas[$k]->recargo = floatval($_POST['recargo_'.$num]);
+                            }
+
+                            if( $lineas[$k]->save() )
+                            {
+                               $presupuesto->neto += $value->pvptotal;
+                               $presupuesto->totaliva += $value->pvptotal * $value->iva/100;
+                               $presupuesto->totalirpf += $value->pvptotal * $value->irpf/100;
+                               $presupuesto->totalrecargo += $value->pvptotal * $value->recargo/100;
+
+                               if($lineas[$k]->cantidad != $cantidad_old)
+                               {
+                                  /// actualizamos el stock
+                                  $art0 = $articulo->get($value->referencia);
+                                  if($art0)
+                                     $art0->sum_stock($presupuesto->codalmacen, $cantidad_old - $lineas[$k]->cantidad);
+                               }
+                            }
+                            else
+                               $this->new_error_msg("¡Imposible modificar la línea del artículo ".$value->referencia."!");
+                            break;
+                         }
+                      }
+
+                      /// añadimos la línea
+                      if(!$encontrada AND intval($_POST['idlinea_'.$num]) == -1 AND isset($_POST['referencia_'.$num]))
+                      {
+                         $linea = new linea_presupuesto_cliente();
+                         $linea->idpresupuesto = $presupuesto->idpresupuesto;
+                         $linea->descripcion = $_POST['desc_'.$num];
+
+                         if( !$serie->siniva AND $this->cliente_s->regimeniva != 'Exento' )
+                         {
+                            $imp0 = $this->impuesto->get_by_iva($_POST['iva_'.$num]);
+                            if($imp0)
+                               $linea->codimpuesto = $imp0->codimpuesto;
+
+                            $linea->iva = floatval($_POST['iva_'.$num]);
+                            $linea->recargo = floatval($_POST['recargo_'.$num]);
+                         }
+
+                         $linea->irpf = floatval($_POST['irpf_'.$num]);
+                         $linea->cantidad = floatval($_POST['cantidad_'.$num]);
+                         $linea->pvpunitario = floatval($_POST['pvp_'.$num]);
+                         $linea->dtopor = floatval($_POST['dto_'.$num]);
+                         $linea->pvpsindto = ($linea->cantidad * $linea->pvpunitario);
+                         $linea->pvptotal = ($linea->cantidad * $linea->pvpunitario * (100 - $linea->dtopor)/100);
+
+                         $art0 = $articulo->get( $_POST['referencia_'.$num] );
+                         if($art0)
+                         {
+                            $linea->referencia = $art0->referencia;
+                         }
+
+                         if( $linea->save() )
+                         {
+                            if($art0)
+                            {
+                               /// actualizamos el stock
+                               $art0->sum_stock($presupuesto->codalmacen, 0 - $linea->cantidad);
+                            }
+
+                            $presupuesto->neto += $linea->pvptotal;
+                            $presupuesto->totaliva += $linea->pvptotal * $linea->iva/100;
+                            $presupuesto->totalirpf += $linea->pvptotal * $linea->irpf/100;
+                            $presupuesto->totalrecargo += $linea->pvptotal * $linea->recargo/100;
+                         }
+                         else
+                            $this->new_error_msg("¡Imposible guardar la línea del artículo ".$linea->referencia."!");
+                      }
+                   }
+                }
+
+                
+             }
+                  
+
+            
+            if($continuar)
+            {
+               /// redondeamos
+               $presupuesto->neto = round($presupuesto->neto, FS_NF0);
+               $presupuesto->totaliva = round($presupuesto->totaliva, FS_NF0);
+               $presupuesto->totalirpf = round($presupuesto->totalirpf, FS_NF0);
+               $presupuesto->totalrecargo = round($presupuesto->totalrecargo, FS_NF0);
+               $presupuesto->total = $presupuesto->neto + $presupuesto->totaliva - $presupuesto->totalirpf + $presupuesto->totalrecargo;
+               
+               if( $presupuesto->save() )
+               {
+                  $this->new_message("<a href='./index.php?page=tpvmod&edita=presupuesto&id=".$presupuesto->idpresupuesto."'>".FS_PRESUPUESTO."</a> guardado correctamente. <a  href='index.php?page=ventas_imprimir&presupuesto=TRUE&id=".$presupuesto->idpresupuesto."'>Imprimir</a>");
+				  
+                  
+                  
+                  /// actualizamos la caja
+                  $this->caja->dinero_fin += $presupuesto->total;
+                  $this->caja->tickets += 1;
+                  $this->caja->ip = $_SERVER['REMOTE_ADDR'];
+                  if( !$this->caja->save() )
+                  {
+                     $this->new_error_msg("¡Imposible actualizar la caja!");
+                  }
+               }
+               else
+                  $this->new_error_msg("¡Imposible actualizar el <a href='".$presupuesto->url()."'>".FS_ALBARAN."</a>!");
+            }
+            else if( $presupuesto->delete() )
+            {
+               $this->new_message(FS_ALBARAN." eliminado correctamente.");
+            }
+            else
+               $this->new_error_msg("¡Imposible eliminar el <a href='".$presupuesto->url()."'>".FS_ALBARAN."</a>!");
+      }
+      $this->cliente_s = $this->cliente->get($this->clientedefault);
+   }
+   
+   
+     private function edita_factura_cliente()
+   {
+      $continuar = TRUE;
+      $this->cliente_s = $this->cliente->get($_POST['cliente']);
+      if( !$this->cliente_s)
+      {
+         $this->new_error_msg('Cliente no encontrado.');
+         $continuar = FALSE;
+      }
+      $almacen = $this->almacen->get($_POST['almacen']);
+      if( $almacen )
+         $this->save_codalmacen( $almacen->codalmacen );
+      else
+      {
+         $this->new_error_msg('Almacén no encontrado.');
+         $continuar = FALSE;
+      }
+      
+      $ejercicio = $this->ejercicio->get_by_fecha($_POST['fecha']);
+      if( !$ejercicio )
+      {
+         $this->new_error_msg('Ejercicio no encontrado.');
+         $continuar = FALSE;
+      }
+      
+      $serie = $this->serie->get($_POST['serie']);
+      if( !$serie )
+      {
+         $this->new_error_msg('Serie no encontrada.');
+         $continuar = FALSE;
+      }
+      
+      $forma_pago = $this->forma_pago->get($_POST['forma_pago']);
+      if( $forma_pago )
+         $this->save_codpago( $forma_pago->codpago );
+      else
+      {
+         $this->new_error_msg('Forma de pago no encontrada.');
+         $continuar = FALSE;
+      }
+      
+      $divisa = $this->divisa->get($_POST['divisa']);
+      if( !$divisa )
+      {
+         $this->new_error_msg('Divisa no encontrada.');
+         $continuar = FALSE;
+      }
+      
+      if( isset($_POST['imprimir_desc']) )
+      {
+         $this->imprimir_descripciones = TRUE;
+         setcookie('imprimir_desc', TRUE, time()+FS_COOKIES_EXPIRE);
+      }
+      else
+      {
+         $this->imprimir_descripciones = FALSE;
+         setcookie('imprimir_desc', FALSE, time()-FS_COOKIES_EXPIRE);
+      }
+      
+      if( isset($_POST['imprimir_obs']) )
+      {
+         $this->imprimir_observaciones = TRUE;
+         setcookie('imprimir_obs', TRUE, time()+FS_COOKIES_EXPIRE);
+      }
+      else
+      {
+         $this->imprimir_observaciones = FALSE;
+         setcookie('imprimir_obs', FALSE, time()-FS_COOKIES_EXPIRE);
+      }
+      
+      $factura = new factura_cliente();
+      $factura = $factura->get($_POST['id']);
+      
+      
+      if( $continuar )
+      {
+         $factura->fecha = $_POST['fecha'];
+         $factura->codalmacen = $almacen->codalmacen;
+         $factura->codejercicio = $ejercicio->codejercicio;
+         $factura->codserie = $serie->codserie;
+         $factura->codpago = $forma_pago->codpago;
+         $factura->coddivisa = $divisa->coddivisa;
+         $factura->tasaconv = $divisa->tasaconv;
+         $factura->codagente = $this->agente->codagente;
+         $factura->observaciones = $_POST['observaciones'];
+         $factura->numero2 = $_POST['numero2'];
+         $factura->irpf = $serie->irpf;
+         $factura->porcomision = $this->agente->porcomision;
+         
+         foreach($this->cliente_s->get_direcciones() as $d)
+         {
+            if($d->domfacturacion)
+            {
+               $factura->codcliente = $this->cliente_s->codcliente;
+               $factura->cifnif = $this->cliente_s->cifnif;
+               $factura->nombrecliente = $this->cliente_s->razonsocial;
+               $factura->apartado = $d->apartado;
+               $factura->ciudad = $d->ciudad;
+               $factura->coddir = $d->id;
+               $factura->codpais = $d->codpais;
+               $factura->codpostal = $d->codpostal;
+               $factura->direccion = $d->direccion;
+               $factura->provincia = $d->provincia;
+               break;
+            }
+         }
+            if( isset($_POST['numlineas']) )
+             {
+                $numlineas = intval($_POST['numlineas']);
+
+                $factura->neto = 0;
+                $factura->totaliva = 0;
+                $factura->totalirpf = 0;
+                $factura->totalrecargo = 0;
+                $lineas = $factura->get_lineas();
+                $articulo = new articulo();
+
+                /// eliminamos las líneas que no encontremos en el $_POST
+                foreach($lineas as $l)
+                {
+                   $encontrada = FALSE;
+                   for($num = 0; $num <= $numlineas; $num++)
+                   {
+                      if( isset($_POST['idlinea_'.$num]) )
+                      {
+                         if($l->idlinea == intval($_POST['idlinea_'.$num]))
+                         {
+                            $encontrada = TRUE;
+                            break;
+                         }
+                      }
+                   }
+                   if( !$encontrada )
+                   {
+                      if( $l->delete() )
+                      {
+                         /// actualizamos el stock
+                         $art0 = $articulo->get($l->referencia);
+                         if($art0)
+                            $art0->sum_stock($factura->codalmacen, $l->cantidad);
+                      }
+                      else
+                         $this->new_error_msg("¡Imposible eliminar la línea del artículo ".$l->referencia."!");
+                   }
+                }
+
+                /// modificamos y/o añadimos las demás líneas
+                for($num = 0; $num <= $numlineas; $num++)
+                {
+                   $encontrada = FALSE;
+                   if( isset($_POST['idlinea_'.$num]) )
+                   {
+                      foreach($lineas as $k => $value)
+                      {
+                         /// modificamos la línea
+                         if($value->idlinea == intval($_POST['idlinea_'.$num]))
+                         {
+                            
+                            $encontrada = TRUE;
+                            $cantidad_old = $value->cantidad;
+                            $lineas[$k]->cantidad = floatval($_POST['cantidad_'.$num]);
+                            $lineas[$k]->pvpunitario = floatval($_POST['pvp_'.$num]);
+                            $lineas[$k]->dtopor = floatval($_POST['dto_'.$num]);
+                            $lineas[$k]->pvpsindto = ($value->cantidad * $value->pvpunitario);
+                            $lineas[$k]->pvptotal = ($value->cantidad * $value->pvpunitario * (100 - $value->dtopor)/100);
+                            $lineas[$k]->descripcion = $_POST['desc_'.$num];
+
+                            $lineas[$k]->codimpuesto = NULL;
+                            $lineas[$k]->iva = 0;
+                            $lineas[$k]->recargo = 0;
+                            $lineas[$k]->irpf = floatval($_POST['irpf_'.$num]);
+                            if( !$serie->siniva AND $this->cliente_s->regimeniva != 'Exento' )
+                            {
+                               $imp0 = $this->impuesto->get_by_iva($_POST['iva_'.$num]);
+                               if($imp0)
+                                  $lineas[$k]->codimpuesto = $imp0->codimpuesto;
+
+                               $lineas[$k]->iva = floatval($_POST['iva_'.$num]);
+                               $lineas[$k]->recargo = floatval($_POST['recargo_'.$num]);
+                            }
+
+                            if( $lineas[$k]->save() )
+                            {
+                               $factura->neto += $value->pvptotal;
+                               $factura->totaliva += $value->pvptotal * $value->iva/100;
+                               $factura->totalirpf += $value->pvptotal * $value->irpf/100;
+                               $factura->totalrecargo += $value->pvptotal * $value->recargo/100;
+
+                               if($lineas[$k]->cantidad != $cantidad_old)
+                               {
+                                  /// actualizamos el stock
+                                  $art0 = $articulo->get($value->referencia);
+                                  if($art0)
+                                     $art0->sum_stock($factura->codalmacen, $cantidad_old - $lineas[$k]->cantidad);
+                               }
+                            }
+                            else
+                               $this->new_error_msg("¡Imposible modificar la línea del artículo ".$value->referencia."!");
+                            break;
+                         }
+                      }
+
+                      /// añadimos la línea
+                      if(!$encontrada AND intval($_POST['idlinea_'.$num]) == -1 AND isset($_POST['referencia_'.$num]))
+                      {
+                         $linea = new linea_factura_cliente();
+                         $linea->idfactura = $factura->idfactura;
+                         $linea->descripcion = $_POST['desc_'.$num];
+
+                         if( !$serie->siniva AND $this->cliente_s->regimeniva != 'Exento' )
+                         {
+                            $imp0 = $this->impuesto->get_by_iva($_POST['iva_'.$num]);
+                            if($imp0)
+                               $linea->codimpuesto = $imp0->codimpuesto;
+
+                            $linea->iva = floatval($_POST['iva_'.$num]);
+                            $linea->recargo = floatval($_POST['recargo_'.$num]);
+                         }
+
+                         $linea->irpf = floatval($_POST['irpf_'.$num]);
+                         $linea->cantidad = floatval($_POST['cantidad_'.$num]);
+                         $linea->pvpunitario = floatval($_POST['pvp_'.$num]);
+                         $linea->dtopor = floatval($_POST['dto_'.$num]);
+                         $linea->pvpsindto = ($linea->cantidad * $linea->pvpunitario);
+                         $linea->pvptotal = ($linea->cantidad * $linea->pvpunitario * (100 - $linea->dtopor)/100);
+
+                         $art0 = $articulo->get( $_POST['referencia_'.$num] );
+                         if($art0)
+                         {
+                            $linea->referencia = $art0->referencia;
+                         }
+
+                         if( $linea->save() )
+                         {
+                            if($art0)
+                            {
+                               /// actualizamos el stock
+                               $art0->sum_stock($factura->codalmacen, 0 - $linea->cantidad);
+                            }
+
+                            $factura->neto += $linea->pvptotal;
+                            $factura->totaliva += $linea->pvptotal * $linea->iva/100;
+                            $factura->totalirpf += $linea->pvptotal * $linea->irpf/100;
+                            $factura->totalrecargo += $linea->pvptotal * $linea->recargo/100;
+                         }
+                         else
+                            $this->new_error_msg("¡Imposible guardar la línea del artículo ".$linea->referencia."!");
+                      }
+                   }
+                }
+
+                
+             }
+                  
+
+            
+            if($continuar)
+            {
+               /// redondeamos
+               $factura->neto = round($factura->neto, FS_NF0);
+               $factura->totaliva = round($factura->totaliva, FS_NF0);
+               $factura->totalirpf = round($factura->totalirpf, FS_NF0);
+               $factura->totalrecargo = round($factura->totalrecargo, FS_NF0);
+               $factura->total = $factura->neto + $factura->totaliva - $factura->totalirpf + $factura->totalrecargo;
+               
+               if( $factura->save() )
+               {
+                  $this->new_message("<a href='./index.php?page=tpvmod&edita=factura&id=".$factura->idfactura."'>".FS_FACTURA."</a> guardado correctamente. <a  href='index.php?page=factura_detallada&id=".$factura->idfactura."'>Imprimir</a>");
+				  
+                  
+                  
+                  /// actualizamos la caja
+                  $this->caja->dinero_fin += $factura->total;
+                  $this->caja->tickets += 1;
+                  $this->caja->ip = $_SERVER['REMOTE_ADDR'];
+                  if( !$this->caja->save() )
+                  {
+                     $this->new_error_msg("¡Imposible actualizar la caja!");
+                  }
+               }
+               else
+                  $this->new_error_msg("¡Imposible actualizar el <a href='".$factura->url()."'>".FS_ALBARAN."</a>!");
+            }
+            else if( $factura->delete() )
+            {
+               $this->new_message(FS_ALBARAN." eliminado correctamente.");
+            }
+            else
+               $this->new_error_msg("¡Imposible eliminar el <a href='".$factura->url()."'>".FS_ALBARAN."</a>!");
+      }
+      $this->cliente_s = $this->cliente->get($this->clientedefault);
+   }
+   
    private function abrir_caja()
    {
       if($this->user->admin)
@@ -1246,19 +2531,7 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Sólo un administrador puede abrir la caja.');
    }
 
-   private function share_extensions()
-   {
-      $extension = array(
-          'name' => 'tpvmod',
-          'page_from' => __CLASS__,
-          'page_to' => 'ventas_presupuesto',
-          'type' => 'button',
-          'text' => '<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> &nbsp; Abrir con TPVMOD',
-          'params' => ''
-      );
-      $fsext = new fs_extension($extension);
-      $fsext->save();
-   }
+   
    
    private function cerrar_caja()
    {
@@ -1390,74 +2663,4 @@ class tpvmod extends fs_controller
       return $tipos;
    }
    
-   
-   private function imprimir_ticket($albaran, $num_tickets = 1, $cajon = TRUE)
-   {
-      if($this->terminal)
-      {
-         if($cajon)
-         {
-            $this->terminal->abrir_cajon();
-         }
-         
-         while($num_tickets > 0)
-         {
-            $linea = "\nTicket: " . $albaran->codigo;
-            $linea .= " " . $albaran->fecha;
-            $linea .= " " . $albaran->show_hora(FALSE) . "\n";
-            $this->terminal->add_linea($linea);
-            $this->terminal->add_linea("Cliente: " . $albaran->nombrecliente . "\n");
-            $this->terminal->add_linea("Empleado: " . $albaran->codagente . "\n\n");
-            
-            if($this->imprimir_observaciones)
-            {
-               $this->terminal->add_linea('Observaciones: '.$albaran->observaciones."\n\n");
-            }
-            
-            $this->terminal->add_linea(sprintf("%3s", "Ud.")." ".sprintf("%-25s", "Articulo")." ".sprintf("%10s", "TOTAL")."\n");
-            $this->terminal->add_linea(sprintf("%3s", "---")." ".sprintf("%-25s", "-------------------------")." ".sprintf("%10s", "----------")."\n");
-            foreach($albaran->get_lineas() as $col)
-            {
-               if($this->imprimir_descripciones)
-               {
-                  $linea = sprintf("%3s", $col->cantidad)." ".sprintf("%-25s", substr($col->descripcion, 0, 24))." "
-                     .sprintf("%10s", $this->show_numero($col->total_iva()))."\n";
-               }
-               else
-               {
-                  $linea = sprintf("%3s", $col->cantidad)." ".sprintf("%-25s", $col->referencia)." "
-                     .sprintf("%10s", $this->show_numero($col->total_iva()))."\n";
-               }
-               
-               $this->terminal->add_linea($linea);
-            }
-            
-            $linea = "----------------------------------------\n"
-               .$this->terminal->center_text(
-                  "IVA: ".$this->show_precio($albaran->totaliva, $albaran->coddivisa, FALSE).'   '.
-                  "Total: ".$this->show_precio($albaran->total, $albaran->coddivisa, FALSE)
-               )."\n\n\n\n";
-            $this->terminal->add_linea($linea);
-            
-            $this->terminal->add_linea_big( $this->terminal->center_text($this->empresa->nombre, 16)."\n");
-            
-            if($this->empresa->lema != '')
-            {
-               $this->terminal->add_linea( $this->terminal->center_text($this->empresa->lema) . "\n\n");
-            }
-            else
-               $this->terminal->add_linea("\n");
-            
-            $this->terminal->add_linea( $this->terminal->center_text($this->empresa->direccion . " - " . $this->empresa->ciudad) . "\n");
-            $this->terminal->add_linea( $this->terminal->center_text("CIF: " . $this->empresa->cifnif) . chr(27).chr(105) . "\n\n"); /// corta el papel
-            
-            if($this->empresa->horario != '')
-               $this->terminal->add_linea( $this->terminal->center_text($this->empresa->horario) . "\n");
-            
-            $num_tickets--;
-         }
-         
-         $this->terminal->save();
-      }
-   }
 }
