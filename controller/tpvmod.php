@@ -13,7 +13,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -75,12 +75,12 @@ class tpvmod extends fs_controller
    {
       parent::__construct(__CLASS__, 'TPVMOD', 'TPV');
    }
-   
+
    protected function private_core()
    {
       /// ¿El usuario tiene permiso para eliminar en esta página?
       $this->allow_delete = $this->user->allow_delete_on(__CLASS__);
-      
+
       $this->articulo = new articulo();
       $this->cliente = new cliente();
       $this->cliente_s = $this->cliente->get($this->clientedefault);//cargo el cliente por defecto que en mi caso es cliente de contado con codcliente 000001 si no tienes cliente por defecto pon false
@@ -88,7 +88,7 @@ class tpvmod extends fs_controller
       $this->impuesto = new impuesto();
       $this->carga_proveedores();
       $this->results = array();
-      
+
       if( isset($_REQUEST['buscar_cliente']) )
       {
          $this->buscar_cliente();
@@ -108,7 +108,7 @@ class tpvmod extends fs_controller
              if($_GET['id'])
              {
                  $this->id_documento=$_GET['id'];
-                 
+
                  if($_GET['edita']=="albaran")
                  {
                      $this->vienede="albaran";
@@ -190,9 +190,9 @@ class tpvmod extends fs_controller
                      $this->new_error_msg("No se ha pasado ningun id en el factura");
                  }
              }
-             else 
+             else
              {
-                $this->cliente_s = $this->cliente->get($this->clientedefault); 
+                $this->cliente_s = $this->cliente->get($this->clientedefault);
              }
          }
          $this->agente = $this->user->get_agente();
@@ -201,19 +201,19 @@ class tpvmod extends fs_controller
          $this->ejercicio = new ejercicio();
          $this->forma_pago = new forma_pago();
          $this->serie = new serie();
-         
+
          $this->imprimir_descripciones = FALSE;
          if( isset($_REQUEST['imprimir_desc']) )
          {
             $this->imprimir_descripciones = TRUE;
          }
-         
+
          $this->imprimir_observaciones = FALSE;
          if( isset($_REQUEST['imprimir_obs']) )
          {
             $this->imprimir_observaciones = TRUE;
          }
-         
+
          if($this->agente)
          {
             $this->caja = FALSE;
@@ -229,7 +229,7 @@ class tpvmod extends fs_controller
                   break;
                }
             }
-            
+
             if(!$this->caja)
             {
                if( isset($_POST['terminal']) )
@@ -268,7 +268,7 @@ class tpvmod extends fs_controller
                      $this->new_error_msg('Terminal no encontrado.');
                }
             }
-            
+
             if($this->caja)
             {
                /*if( isset($_POST['cliente']) )
@@ -279,7 +279,7 @@ class tpvmod extends fs_controller
                {
                   $this->cliente_s = $this->cliente->get($this->terminal->codcliente);
                }
-               
+
                if(!$this->cliente_s)
                {
                   foreach($this->cliente->all() as $cli)
@@ -288,7 +288,7 @@ class tpvmod extends fs_controller
                      break;
                   }
                }*/
-               
+
                if( isset($_GET['abrir_caja']) )
                {
                   $this->abrir_caja();
@@ -310,7 +310,7 @@ class tpvmod extends fs_controller
                             else if($_POST['tipo'] == 'pedido')
                             {
                			$this->nuevo_pedido_cliente();
-                            }            
+                            }
                             else if($_POST['tipo'] == 'albaran')
                             {
                                 $this->nuevo_albaran_cliente();
@@ -359,7 +359,7 @@ class tpvmod extends fs_controller
          }
       }
    }
-   
+
    private function carga_proveedores()
    {
        $proveedores = $this->db->select("SELECT * FROM proveedores ORDER BY nombre ASC;");
@@ -369,22 +369,22 @@ class tpvmod extends fs_controller
                $this->lista_proveedores[$p['codproveedor']] = $p['nombre'];
          }
    }
-   
+
    private function buscar_cliente()
    {
       /// desactivamos la plantilla HTML
       $this->template = FALSE;
-      
+
       $json = array();
       foreach($this->cliente->search($_REQUEST['buscar_cliente']) as $cli)
       {
          $json[] = array('value' => "$cli->nombre Tlf:$cli->telefono1  Tlf2:$cli->telefono2", 'data' => $cli->codcliente);
       }
-      
+
       header('Content-Type: application/json');
       echo json_encode( array('query' => $_REQUEST['buscar_cliente'], 'suggestions' => $json) );
    }
-   
+
    public function get_pvp_iva($ref)
   {
       $articulo=new articulo();
@@ -397,9 +397,9 @@ class tpvmod extends fs_controller
       else
         return false;
   }
-  
-  
-   
+
+
+
   public function get_linea_mejor($ref,$pvp,$iva)
    {
        $mejor_proveedor=new articulo_proveedor_plus();
@@ -417,78 +417,78 @@ class tpvmod extends fs_controller
             elseif($iva>0)
                 $this->linea_mejor['pvd_iva']=round($mejor_proveedor['pvd']+($mejor_proveedor['pvd']*$iva/100), 3);
             $this->linea_mejor['proveedor']=$mejor_proveedor['codproveedor'];
-            $this->linea_mejor['stock']=$mejor_proveedor['stock'];  
+            $this->linea_mejor['stock']=$mejor_proveedor['stock'];
             $this->linea_mejor['porcentaje']= round((($this->linea_mejor['pvp_iva']-$this->linea_mejor['pvd_iva'])/$this->linea_mejor['pvd_iva']*100), 2)."%";
        }
        else {
            $flag="No entra";
            $this->linea_mejor=NULL;
        }
-       
+
        return $flag;
    }
-  
+
    public function get_pvd_mejor($ref)
    {
        $mejor_proveedor=new articulo_proveedor_plus();
        $mejor_proveedor=$mejor_proveedor->getmejor($ref);
        if($mejor_proveedor)
             return  $mejor_proveedor->get_pvd_iva();
-        else 
+        else
             return false;
    }
-   
+
    public function porcentaje_ganancia($ref)
    {
        return round((($this->get_pvp_iva($ref)-$this->get_pvd_mejor($ref))/$this->get_pvd_mejor($ref)*100), 2)."%";
    }
-   
+
    public function get_stock_virtual($ref)
    {
        $mejor_proveedor=new articulo_proveedor_plus();
        $mejor_proveedor=$mejor_proveedor->getmejor($ref);
        if($mejor_proveedor)
             return  $mejor_proveedor->stock;
-        else 
+        else
             return false;
    }
-   
+
    public function nom_proveedor($ref)
    {
        if($ref)
        {
            if($this->lista_proveedores[$ref])
             return  $this->lista_proveedores[$ref];
-           else 
+           else
             return false;
        }
-        else 
+        else
             return false;
    }
-   
-   
+
+
    private function new_search()
    {
       /// cambiamos la plantilla HTML
       $this->template = 'ajax/tpv_recambios';
       //$this->template=false;
-      
+
       $codfamilia = '';
       if( isset($_POST['codfamilia']) )
       {
          $codfamilia = $_POST['codfamilia'];
       }
-      
+
       $con_stock = isset($_POST['con_stock']);
       $this->results = $this->articulo->search($this->query, 0, $codfamilia, $con_stock);
-      
+
       /// añadimos el descuento y la cantidad
       foreach($this->results as $i => $value)
       {
          $this->results[$i]->dtopor = 0;
          $this->results[$i]->cantidad = 1;
       }
-      
+
       /// ejecutamos las funciones de las extensiones
       foreach($this->extensions as $ext)
       {
@@ -498,7 +498,7 @@ class tpvmod extends fs_controller
             $name($this->db, $this->results);
          }
       }
-      
+
       $cliente = $this->cliente->get($_POST['codcliente']);
       if($cliente)
       {
@@ -507,12 +507,12 @@ class tpvmod extends fs_controller
             foreach($this->results as $i => $value)
                $this->results[$i]->iva = 0;
          }
-         
+
          if($cliente->codgrupo)
          {
             $grupo0 = new grupo_clientes();
             $tarifa0 = new tarifa();
-            
+
             $grupo = $grupo0->get($cliente->codgrupo);
             if($grupo)
             {
@@ -527,22 +527,22 @@ class tpvmod extends fs_controller
       //header('Content-Type: application/json');
       //echo json_encode($this->results);
    }
-   
-   
-   
+
+
+
    private function get_precios_articulo()
    {
       /// cambiamos la plantilla HTML
       $this->template = 'ajax/tpv_cambios_precios';
       $this->articulo = $this->articulo->get($_REQUEST['referencia4precios']);
    }
-   
+
    public function get_tarifas_articulo($ref)
    {
       $tarlist = array();
       $articulo = new articulo();
       $tarifa = new tarifa();
-      
+
       foreach($tarifa->all() as $tar)
       {
          $art = $articulo->get($ref);
@@ -554,24 +554,24 @@ class tpvmod extends fs_controller
             $tarlist[] = $aux[0];
          }
       }
-      
+
       return $tarlist;
    }
-   
-   
-   
-   
+
+
+
+
    private function nuevo_presupuesto_cliente()
    {
       $continuar = TRUE;
-      
+
       $cliente = $this->cliente->get($_POST['cliente']);
       if( !$cliente )
       {
          $this->new_error_msg('Cliente no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $almacen = $this->almacen->get($_POST['almacen']);
       if( $almacen )
          $this->save_codalmacen( $almacen->codalmacen );
@@ -580,7 +580,7 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Almacén no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $eje0 = new ejercicio();
       $ejercicio = $eje0->get_by_fecha($_POST['fecha']);
       if( !$ejercicio )
@@ -588,14 +588,14 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Ejercicio no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $serie = $this->serie->get($_POST['serie']);
       if( !$serie )
       {
          $this->new_error_msg('Serie no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $forma_pago = $this->forma_pago->get($_POST['forma_pago']);
       if( $forma_pago )
          $this->save_codpago( $forma_pago->codpago );
@@ -604,16 +604,16 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Forma de pago no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $divisa = $this->divisa->get($_POST['divisa']);
       if( !$divisa )
       {
          $this->new_error_msg('Divisa no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $presupuesto = new presupuesto_cliente();
-      
+
       if( $this->duplicated_petition($_POST['petition_id']) )
       {
          $this->new_error_msg('Petición duplicada. Has hecho doble clic sobre el botón guardar
@@ -621,7 +621,7 @@ class tpvmod extends fs_controller
                para ver si el presupuesto se ha guardado correctamente.');
          $continuar = FALSE;
       }
-      
+
       if($continuar)
       {
          $presupuesto->fecha = $_POST['fecha'];
@@ -637,7 +637,7 @@ class tpvmod extends fs_controller
          $presupuesto->numero2 = $_POST['numero2'];
          $presupuesto->irpf = $serie->irpf;
          $presupuesto->porcomision = $this->agente->porcomision;
-         
+
          foreach($cliente->get_direcciones() as $d)
          {
             if($d->domfacturacion)
@@ -655,7 +655,7 @@ class tpvmod extends fs_controller
                break;
             }
          }
-         
+
          if( is_null($presupuesto->codcliente) )
          {
             $this->new_error_msg("No hay ninguna dirección asociada al cliente.");
@@ -713,10 +713,10 @@ class tpvmod extends fs_controller
                         $this->new_error_msg("¡Imposible guardar la linea con referencia: ".$linea->referencia);
                         $continuar = FALSE;
                      }
-                  
+
                }
             }
-            
+
             if($continuar)
             {
                /// redondeamos
@@ -725,7 +725,7 @@ class tpvmod extends fs_controller
                $presupuesto->totalirpf = round($presupuesto->totalirpf, FS_NF0);
                $presupuesto->totalrecargo = round($presupuesto->totalrecargo, FS_NF0);
                $presupuesto->total = $presupuesto->neto + $presupuesto->totaliva - $presupuesto->totalirpf + $presupuesto->totalrecargo;
-               
+
 					if( $presupuesto->save() )
                {
                   $this->new_message("<a href='./index.php?page=tpvmod&edita=presupuesto&id=".$presupuesto->idpresupuesto."'>".ucfirst(FS_PRESUPUESTO)."</a> guardado correctamente. <a href='index.php?page=imprimir_presu_pedi&presupuesto=TRUE&id=".$presupuesto->idpresupuesto."'>Imprimir</a>");
@@ -746,7 +746,7 @@ class tpvmod extends fs_controller
             $this->new_error_msg("¡Imposible guardar el ".FS_PRESUPUESTO."!");
       }
    }
-   
+
    private function nueva_factura_cliente()
    {
       $continuar = TRUE;
@@ -756,7 +756,7 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Cliente no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $almacen = $this->almacen->get($_POST['almacen']);
       if( $almacen )
          $this->save_codalmacen( $almacen->codalmacen );
@@ -765,7 +765,7 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Almacén no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $eje0 = new ejercicio();
       $ejercicio = $eje0->get_by_fecha($_POST['fecha']);
       if( !$ejercicio )
@@ -773,14 +773,14 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Ejercicio no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $serie = $this->serie->get($_POST['serie']);
       if( !$serie )
       {
          $this->new_error_msg('Serie no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $forma_pago = $this->forma_pago->get($_POST['forma_pago']);
       if( $forma_pago )
          $this->save_codpago( $forma_pago->codpago );
@@ -789,18 +789,18 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Forma de pago no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $divisa = $this->divisa->get($_POST['divisa']);
       if( ! $divisa )
       {
          $this->new_error_msg('Divisa no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $factura = new factura_cliente();
-      
-      
-      
+
+
+
       if($continuar)
       {
          $factura->fecha = $_POST['fecha'];
@@ -815,7 +815,7 @@ class tpvmod extends fs_controller
          $factura->numero2 = $_POST['numero2'];
          $factura->irpf = $serie->irpf;
          $factura->porcomision = $this->agente->porcomision;
-         
+
          foreach($cliente->get_direcciones() as $d)
          {
             if($d->domfacturacion)
@@ -833,7 +833,7 @@ class tpvmod extends fs_controller
                break;
             }
          }
-         
+
          if( is_null($factura->codcliente) )
          {
             $this->new_error_msg("No hay ninguna dirección asociada al cliente.");
@@ -855,7 +855,7 @@ class tpvmod extends fs_controller
                         }
                      }
                      $linea->descripcion = $_POST['desc_'.$i];
-                     
+
                      if( !$serie->siniva AND $cliente->regimeniva != 'Exento' )
                      {
                         $imp0 = $this->impuesto->get_by_iva($_POST['iva_'.$i]);
@@ -871,22 +871,22 @@ class tpvmod extends fs_controller
                            $linea->recargo = floatval($_POST['recargo_'.$i]);
                         }
                      }
-                     
+
                      if($linea->iva > 0)
                         $linea->irpf = $factura->irpf;
-                     
+
                      $linea->pvpunitario = floatval($_POST['pvp_'.$i]);
                      $linea->cantidad = floatval($_POST['cantidad_'.$i]);
                      //$linea->dtopor = floatval($_POST['dto_'.$i]);
                      $linea->pvpsindto = ($linea->pvpunitario * $linea->cantidad);
                      $linea->pvptotal = floatval($_POST['neto_'.$i]);
-                     
+
                      if( $linea->save() )
                      {
                         /// descontamos del stock
                         if($articulo)
                             $articulo->sum_stock($factura->codalmacen, 0 - $linea->cantidad);
-                        
+
                         $factura->neto += $linea->pvptotal;
                         $factura->totaliva += ($linea->pvptotal * $linea->iva/100);
                         $factura->totalirpf += ($linea->pvptotal * $linea->irpf/100);
@@ -898,7 +898,7 @@ class tpvmod extends fs_controller
                         $continuar = FALSE;
                      }
             }
-            
+
             if($continuar)
             {
                /// redondeamos
@@ -907,9 +907,10 @@ class tpvmod extends fs_controller
                $factura->totalirpf = round($factura->totalirpf, FS_NF0);
                $factura->totalrecargo = round($factura->totalrecargo, FS_NF0);
                $factura->total = $factura->neto + $factura->totaliva - $factura->totalirpf + $factura->totalrecargo;
-               
+
 	       if( $factura->save() )
                {
+                  $factura->get_lineas_iva();
                   $this->new_message("<a href='".$factura->url()."'>Factura</a> guardada correctamente. <a  href='index.php?page=factura_detallada&id=".$factura->idfactura."'>Imprimir</a>");
                   $this->new_change('Factura Cliente '.$factura->codigo, $factura->url(), TRUE);
 		  $this->cliente_s = $this->cliente->get($this->clientedefault);
@@ -928,18 +929,18 @@ class tpvmod extends fs_controller
             $this->new_error_msg("¡Imposible guardar la Factura!");
       }
    }
-   
+
    private function nuevo_pedido_cliente()
    {
       $continuar = TRUE;
-      
+
       $cliente = $this->cliente->get($_POST['cliente']);
       if( !$cliente )
       {
          $this->new_error_msg('Cliente no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $almacen = $this->almacen->get($_POST['almacen']);
       if( $almacen )
          $this->save_codalmacen( $almacen->codalmacen );
@@ -948,7 +949,7 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Almacén no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $eje0 = new ejercicio();
       $ejercicio = $eje0->get_by_fecha($_POST['fecha']);
       if( !$ejercicio )
@@ -956,14 +957,14 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Ejercicio no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $serie = $this->serie->get($_POST['serie']);
       if( !$serie )
       {
          $this->new_error_msg('Serie no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $forma_pago = $this->forma_pago->get($_POST['forma_pago']);
       if( $forma_pago )
          $this->save_codpago( $forma_pago->codpago );
@@ -972,16 +973,16 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Forma de pago no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $divisa = $this->divisa->get($_POST['divisa']);
       if( !$divisa )
       {
          $this->new_error_msg('Divisa no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $pedido = new pedido_cliente();
-      
+
       if( $this->duplicated_petition($_POST['petition_id']) )
       {
          $this->new_error_msg('Petición duplicada. Has hecho doble clic sobre el botón guardar
@@ -989,7 +990,7 @@ class tpvmod extends fs_controller
                para ver si el pedido se ha guardado correctamente.');
          $continuar = FALSE;
       }
-      
+
       if($continuar)
       {
          $pedido->fecha = $_POST['fecha'];
@@ -1004,7 +1005,7 @@ class tpvmod extends fs_controller
          $pedido->numero2 = $_POST['numero2'];
          $pedido->irpf = $serie->irpf;
          $pedido->porcomision = $this->agente->porcomision;
-         
+
          foreach($cliente->get_direcciones() as $d)
          {
             if($d->domfacturacion)
@@ -1022,7 +1023,7 @@ class tpvmod extends fs_controller
                break;
             }
          }
-         
+
          if( is_null($pedido->codcliente) )
          {
             $this->new_error_msg("No hay ninguna dirección asociada al cliente.");
@@ -1033,7 +1034,7 @@ class tpvmod extends fs_controller
             $n = floatval($_POST['numlineas']);
             for($i = 1; $i <= $n; $i++)
             {
-               
+
                  $linea = new linea_pedido_cliente();
                  $linea->idpedido = $pedido->idpedido;
                  if( isset($_POST['referencia_'.$i]) )
@@ -1083,9 +1084,9 @@ class tpvmod extends fs_controller
                     $this->new_error_msg("¡Imposible guardar la linea con referencia: ".$linea->referencia);
                     $continuar = FALSE;
                  }
-                  
+
             }
-            
+
             if($continuar)
             {
                /// redondeamos
@@ -1094,7 +1095,7 @@ class tpvmod extends fs_controller
                $pedido->totalirpf = round($pedido->totalirpf, FS_NF0);
                $pedido->totalrecargo = round($pedido->totalrecargo, FS_NF0);
                $pedido->total = $pedido->neto + $pedido->totaliva - $pedido->totalirpf + $pedido->totalrecargo;
-               
+
                 if( $pedido->save() )
                {
                   $this->new_message("<a href='./index.php?page=tpvmod&edita=pedido&id=".$pedido->idpedido."'>".ucfirst(FS_PEDIDO)."</a> guardado correctamente. <a href='index.php?page=imprimir_presu_pedi&pedido=TRUE&id=".$pedido->idpedido."'>Imprimir</a>");
@@ -1132,21 +1133,21 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Almacén no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $ejercicio = $this->ejercicio->get_by_fecha($_POST['fecha']);
       if( !$ejercicio )
       {
          $this->new_error_msg('Ejercicio no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $serie = $this->serie->get($_POST['serie']);
       if( !$serie )
       {
          $this->new_error_msg('Serie no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $forma_pago = $this->forma_pago->get($_POST['forma_pago']);
       if( $forma_pago )
          $this->save_codpago( $forma_pago->codpago );
@@ -1155,14 +1156,14 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Forma de pago no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $divisa = $this->divisa->get($_POST['divisa']);
       if( !$divisa )
       {
          $this->new_error_msg('Divisa no encontrada.');
          $continuar = FALSE;
       }
-      
+
       if( isset($_POST['imprimir_desc']) )
       {
          $this->imprimir_descripciones = TRUE;
@@ -1173,7 +1174,7 @@ class tpvmod extends fs_controller
          $this->imprimir_descripciones = FALSE;
          setcookie('imprimir_desc', FALSE, time()-FS_COOKIES_EXPIRE);
       }
-      
+
       if( isset($_POST['imprimir_obs']) )
       {
          $this->imprimir_observaciones = TRUE;
@@ -1184,9 +1185,9 @@ class tpvmod extends fs_controller
          $this->imprimir_observaciones = FALSE;
          setcookie('imprimir_obs', FALSE, time()-FS_COOKIES_EXPIRE);
       }
-      
+
       $albaran = new albaran_cliente();
-      
+
       if( $this->duplicated_petition($_POST['petition_id']) )
       {
          $this->new_error_msg('Petición duplicada. Has hecho doble clic sobre el botón Guardar
@@ -1194,7 +1195,7 @@ class tpvmod extends fs_controller
                para ver si el '.FS_ALBARAN.' se ha guardado correctamente.');
          $continuar = FALSE;
       }
-      
+
       if( $continuar )
       {
          $albaran->fecha = $_POST['fecha'];
@@ -1209,7 +1210,7 @@ class tpvmod extends fs_controller
          $albaran->numero2 = $_POST['numero2'];
          $albaran->irpf = $serie->irpf;
          $albaran->porcomision = $this->agente->porcomision;
-         
+
          foreach($cliente->get_direcciones() as $d)
          {
             if($d->domfacturacion)
@@ -1227,7 +1228,7 @@ class tpvmod extends fs_controller
                break;
             }
          }
-         
+
          if( is_null($albaran->codcliente) )
          {
             $this->new_error_msg("No hay ninguna dirección asociada al cliente.");
@@ -1239,7 +1240,7 @@ class tpvmod extends fs_controller
             {
                if( isset($_POST['referencia_'.$i]) )
                {
-                  
+
                  $linea = new linea_albaran_cliente();
                  $linea->idalbaran = $albaran->idalbaran;
                  $articulo = $this->articulo->get($_POST['referencia_'.$i]);
@@ -1289,10 +1290,10 @@ class tpvmod extends fs_controller
                     $this->new_error_msg("¡Imposible guardar la linea con referencia: ".$linea->referencia);
                     $continuar = FALSE;
                  }
-                  
+
                }
             }
-            
+
             if($continuar)
             {
                /// redondeamos
@@ -1301,7 +1302,7 @@ class tpvmod extends fs_controller
                $albaran->totalirpf = round($albaran->totalirpf, FS_NF0);
                $albaran->totalrecargo = round($albaran->totalrecargo, FS_NF0);
                $albaran->total = $albaran->neto + $albaran->totaliva - $albaran->totalirpf + $albaran->totalrecargo;
-               
+
                if( abs(floatval($_POST['tpv_total2']) - $albaran->total) >= .02 )
                {
                   $this->new_error_msg("El total difiere entre la vista y el controlador (".$_POST['tpv_total2'].
@@ -1312,8 +1313,8 @@ class tpvmod extends fs_controller
                {
                   $this->new_message("<a href='./index.php?page=tpvmod&edita=albaran&id=".$albaran->idalbaran."'>".FS_ALBARAN."</a> guardado correctamente. <a  href='index.php?page=ventas_imprimir&albaran=TRUE&id=".$albaran->idalbaran."'>Imprimir</a>");
 	          $this->cliente_s = $this->cliente->get($this->clientedefault);
-                  
-                  
+
+
                   /// actualizamos la caja
                   $this->caja->dinero_fin += $albaran->total;
                   $this->caja->tickets += 1;
@@ -1337,7 +1338,7 @@ class tpvmod extends fs_controller
             $this->new_error_msg("¡Imposible guardar el ".FS_ALBARAN."!");
       }
    }
-   
+
       private function edita_albaran_cliente()
    {
       $continuar = TRUE;
@@ -1355,21 +1356,21 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Almacén no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $ejercicio = $this->ejercicio->get_by_fecha($_POST['fecha']);
       if( !$ejercicio )
       {
          $this->new_error_msg('Ejercicio no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $serie = $this->serie->get($_POST['serie']);
       if( !$serie )
       {
          $this->new_error_msg('Serie no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $forma_pago = $this->forma_pago->get($_POST['forma_pago']);
       if( $forma_pago )
          $this->save_codpago( $forma_pago->codpago );
@@ -1378,14 +1379,14 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Forma de pago no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $divisa = $this->divisa->get($_POST['divisa']);
       if( !$divisa )
       {
          $this->new_error_msg('Divisa no encontrada.');
          $continuar = FALSE;
       }
-      
+
       if( isset($_POST['imprimir_desc']) )
       {
          $this->imprimir_descripciones = TRUE;
@@ -1396,7 +1397,7 @@ class tpvmod extends fs_controller
          $this->imprimir_descripciones = FALSE;
          setcookie('imprimir_desc', FALSE, time()-FS_COOKIES_EXPIRE);
       }
-      
+
       if( isset($_POST['imprimir_obs']) )
       {
          $this->imprimir_observaciones = TRUE;
@@ -1407,11 +1408,11 @@ class tpvmod extends fs_controller
          $this->imprimir_observaciones = FALSE;
          setcookie('imprimir_obs', FALSE, time()-FS_COOKIES_EXPIRE);
       }
-      
+
       $albaran = new albaran_cliente();
       $albaran = $albaran->get($_POST['id']);
-      
-      
+
+
       if( $continuar )
       {
          $albaran->fecha = $_POST['fecha'];
@@ -1426,7 +1427,7 @@ class tpvmod extends fs_controller
          $albaran->numero2 = $_POST['numero2'];
          $albaran->irpf = $serie->irpf;
          $albaran->porcomision = $this->agente->porcomision;
-         
+
          foreach($this->cliente_s->get_direcciones() as $d)
          {
             if($d->domfacturacion)
@@ -1495,7 +1496,7 @@ class tpvmod extends fs_controller
                          /// modificamos la línea
                          if($value->idlinea == intval($_POST['idlinea_'.$num]))
                          {
-                            
+
                             $encontrada = TRUE;
                             $cantidad_old = $value->cantidad;
                             $lineas[$k]->cantidad = floatval($_POST['cantidad_'.$num]);
@@ -1589,11 +1590,11 @@ class tpvmod extends fs_controller
                    }
                 }
 
-                
-             }
-                  
 
-            
+             }
+
+
+
             if($continuar)
             {
                /// redondeamos
@@ -1602,13 +1603,13 @@ class tpvmod extends fs_controller
                $albaran->totalirpf = round($albaran->totalirpf, FS_NF0);
                $albaran->totalrecargo = round($albaran->totalrecargo, FS_NF0);
                $albaran->total = $albaran->neto + $albaran->totaliva - $albaran->totalirpf + $albaran->totalrecargo;
-               
+
                if( $albaran->save() )
                {
                   $this->new_message("<a href='./index.php?page=tpvmod&edita=albaran&id=".$albaran->idalbaran."'>".FS_ALBARAN."</a> guardado correctamente. <a  href='index.php?page=ventas_imprimir&albaran=TRUE&id=".$albaran->idalbaran."'>Imprimir</a>");
-				  
-                  
-                  
+
+
+
                   /// actualizamos la caja
                   $this->caja->dinero_fin += $albaran->total;
                   $this->caja->tickets += 1;
@@ -1630,7 +1631,7 @@ class tpvmod extends fs_controller
       }
       $this->cliente_s = $this->cliente->get($this->clientedefault);
    }
-   
+
    private function edita_pedido_cliente()
    {
       $continuar = TRUE;
@@ -1648,21 +1649,21 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Almacén no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $ejercicio = $this->ejercicio->get_by_fecha($_POST['fecha']);
       if( !$ejercicio )
       {
          $this->new_error_msg('Ejercicio no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $serie = $this->serie->get($_POST['serie']);
       if( !$serie )
       {
          $this->new_error_msg('Serie no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $forma_pago = $this->forma_pago->get($_POST['forma_pago']);
       if( $forma_pago )
          $this->save_codpago( $forma_pago->codpago );
@@ -1671,14 +1672,14 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Forma de pago no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $divisa = $this->divisa->get($_POST['divisa']);
       if( !$divisa )
       {
          $this->new_error_msg('Divisa no encontrada.');
          $continuar = FALSE;
       }
-      
+
       if( isset($_POST['imprimir_desc']) )
       {
          $this->imprimir_descripciones = TRUE;
@@ -1689,7 +1690,7 @@ class tpvmod extends fs_controller
          $this->imprimir_descripciones = FALSE;
          setcookie('imprimir_desc', FALSE, time()-FS_COOKIES_EXPIRE);
       }
-      
+
       if( isset($_POST['imprimir_obs']) )
       {
          $this->imprimir_observaciones = TRUE;
@@ -1700,11 +1701,11 @@ class tpvmod extends fs_controller
          $this->imprimir_observaciones = FALSE;
          setcookie('imprimir_obs', FALSE, time()-FS_COOKIES_EXPIRE);
       }
-      
+
       $pedido = new pedido_cliente();
       $pedido = $pedido->get($_POST['id']);
-      
-      
+
+
       if( $continuar )
       {
          $pedido->fecha = $_POST['fecha'];
@@ -1719,7 +1720,7 @@ class tpvmod extends fs_controller
          $pedido->numero2 = $_POST['numero2'];
          $pedido->irpf = $serie->irpf;
          $pedido->porcomision = $this->agente->porcomision;
-         
+
          foreach($this->cliente_s->get_direcciones() as $d)
          {
             if($d->domfacturacion)
@@ -1781,7 +1782,7 @@ class tpvmod extends fs_controller
                          /// modificamos la línea
                          if($value->idlinea == intval($_POST['idlinea_'.$num]))
                          {
-                            
+
                             $encontrada = TRUE;
                             $cantidad_old = $value->cantidad;
                             $lineas[$k]->cantidad = floatval($_POST['cantidad_'.$num]);
@@ -1812,8 +1813,8 @@ class tpvmod extends fs_controller
                                $pedido->totalirpf += $value->pvptotal * $value->irpf/100;
                                $pedido->totalrecargo += $value->pvptotal * $value->recargo/100;
 
-                               
-   
+
+
                             }
                             else
                                $this->new_error_msg("¡Imposible modificar la línea del artículo ".$value->referencia."!");
@@ -1853,7 +1854,7 @@ class tpvmod extends fs_controller
 
                          if( $linea->save() )
                          {
-                            
+
 
                             $pedido->neto += $linea->pvptotal;
                             $pedido->totaliva += $linea->pvptotal * $linea->iva/100;
@@ -1866,11 +1867,11 @@ class tpvmod extends fs_controller
                    }
                 }
 
-                
-             }
-                  
 
-            
+             }
+
+
+
             if($continuar)
             {
                /// redondeamos
@@ -1879,13 +1880,13 @@ class tpvmod extends fs_controller
                $pedido->totalirpf = round($pedido->totalirpf, FS_NF0);
                $pedido->totalrecargo = round($pedido->totalrecargo, FS_NF0);
                $pedido->total = $pedido->neto + $pedido->totaliva - $pedido->totalirpf + $pedido->totalrecargo;
-               
+
                if( $pedido->save() )
                {
                   $this->new_message("<a href='./index.php?page=tpvmod&edita=pedido&id=".$pedido->idpedido."'>".FS_ALBARAN."</a> guardado correctamente. <a  href='index.php?page=ventas_imprimir&pedido=TRUE&id=".$pedido->idpedido."'>Imprimir</a>");
-				  
-                  
-                  
+
+
+
                   /// actualizamos la caja
                   $this->caja->dinero_fin += $pedido->total;
                   $this->caja->tickets += 1;
@@ -1907,8 +1908,8 @@ class tpvmod extends fs_controller
       }
       $this->cliente_s = $this->cliente->get($this->clientedefault);
    }
-   
-   
+
+
    private function edita_presupuesto_cliente()
    {
       $continuar = TRUE;
@@ -1926,21 +1927,21 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Almacén no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $ejercicio = $this->ejercicio->get_by_fecha($_POST['fecha']);
       if( !$ejercicio )
       {
          $this->new_error_msg('Ejercicio no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $serie = $this->serie->get($_POST['serie']);
       if( !$serie )
       {
          $this->new_error_msg('Serie no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $forma_pago = $this->forma_pago->get($_POST['forma_pago']);
       if( $forma_pago )
          $this->save_codpago( $forma_pago->codpago );
@@ -1949,14 +1950,14 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Forma de pago no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $divisa = $this->divisa->get($_POST['divisa']);
       if( !$divisa )
       {
          $this->new_error_msg('Divisa no encontrada.');
          $continuar = FALSE;
       }
-      
+
       if( isset($_POST['imprimir_desc']) )
       {
          $this->imprimir_descripciones = TRUE;
@@ -1967,7 +1968,7 @@ class tpvmod extends fs_controller
          $this->imprimir_descripciones = FALSE;
          setcookie('imprimir_desc', FALSE, time()-FS_COOKIES_EXPIRE);
       }
-      
+
       if( isset($_POST['imprimir_obs']) )
       {
          $this->imprimir_observaciones = TRUE;
@@ -1978,11 +1979,11 @@ class tpvmod extends fs_controller
          $this->imprimir_observaciones = FALSE;
          setcookie('imprimir_obs', FALSE, time()-FS_COOKIES_EXPIRE);
       }
-      
+
       $presupuesto = new presupuesto_cliente();
       $presupuesto = $presupuesto->get($_POST['id']);
-      
-      
+
+
       if( $continuar )
       {
          $presupuesto->fecha = $_POST['fecha'];
@@ -1997,7 +1998,7 @@ class tpvmod extends fs_controller
          $presupuesto->numero2 = $_POST['numero2'];
          $presupuesto->irpf = $serie->irpf;
          $presupuesto->porcomision = $this->agente->porcomision;
-         
+
          foreach($this->cliente_s->get_direcciones() as $d)
          {
             if($d->domfacturacion)
@@ -2059,7 +2060,7 @@ class tpvmod extends fs_controller
                          /// modificamos la línea
                          if($value->idlinea == intval($_POST['idlinea_'.$num]))
                          {
-                            
+
                             $encontrada = TRUE;
                             $cantidad_old = $value->cantidad;
                             $lineas[$k]->cantidad = floatval($_POST['cantidad_'.$num]);
@@ -2090,7 +2091,7 @@ class tpvmod extends fs_controller
                                $presupuesto->totalirpf += $value->pvptotal * $value->irpf/100;
                                $presupuesto->totalrecargo += $value->pvptotal * $value->recargo/100;
 
-          
+
                             }
                             else
                                $this->new_error_msg("¡Imposible modificar la línea del artículo ".$value->referencia."!");
@@ -2142,11 +2143,11 @@ class tpvmod extends fs_controller
                    }
                 }
 
-                
-             }
-                  
 
-            
+             }
+
+
+
             if($continuar)
             {
                /// redondeamos
@@ -2155,13 +2156,13 @@ class tpvmod extends fs_controller
                $presupuesto->totalirpf = round($presupuesto->totalirpf, FS_NF0);
                $presupuesto->totalrecargo = round($presupuesto->totalrecargo, FS_NF0);
                $presupuesto->total = $presupuesto->neto + $presupuesto->totaliva - $presupuesto->totalirpf + $presupuesto->totalrecargo;
-               
+
                if( $presupuesto->save() )
                {
                   $this->new_message("<a href='./index.php?page=tpvmod&edita=presupuesto&id=".$presupuesto->idpresupuesto."'>".FS_PRESUPUESTO."</a> guardado correctamente. <a  href='index.php?page=ventas_imprimir&presupuesto=TRUE&id=".$presupuesto->idpresupuesto."'>Imprimir</a>");
-				  
-                  
-                  
+
+
+
                   /// actualizamos la caja
                   $this->caja->dinero_fin += $presupuesto->total;
                   $this->caja->tickets += 1;
@@ -2183,7 +2184,7 @@ class tpvmod extends fs_controller
       }
       $this->cliente_s = $this->cliente->get($this->clientedefault);
    }
-   
+
       private function edita_factura_cliente2()
    {
       $continuar = TRUE;
@@ -2193,7 +2194,7 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Cliente no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $almacen = $this->almacen->get($_POST['almacen']);
       if( $almacen )
          $this->save_codalmacen( $almacen->codalmacen );
@@ -2202,7 +2203,7 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Almacén no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $eje0 = new ejercicio();
       $ejercicio = $eje0->get_by_fecha($_POST['fecha']);
       if( !$ejercicio )
@@ -2210,14 +2211,14 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Ejercicio no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $serie = $this->serie->get($_POST['serie']);
       if( !$serie )
       {
          $this->new_error_msg('Serie no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $forma_pago = $this->forma_pago->get($_POST['forma_pago']);
       if( $forma_pago )
          $this->save_codpago( $forma_pago->codpago );
@@ -2226,18 +2227,18 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Forma de pago no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $divisa = $this->divisa->get($_POST['divisa']);
       if( ! $divisa )
       {
          $this->new_error_msg('Divisa no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $factura = new factura_cliente();
       $factura = $factura->get($_POST['id']);
-      
-      
+
+
       if($continuar)
       {
          $factura->fecha = $_POST['fecha'];
@@ -2252,7 +2253,7 @@ class tpvmod extends fs_controller
          $factura->numero2 = $_POST['numero2'];
          $factura->irpf = $serie->irpf;
          $factura->porcomision = $this->agente->porcomision;
-         
+
          foreach($cliente->get_direcciones() as $d)
          {
             if($d->domfacturacion)
@@ -2270,7 +2271,7 @@ class tpvmod extends fs_controller
                break;
             }
          }
-         
+
          if( is_null($factura->codcliente) )
          {
             $this->new_error_msg("No hay ninguna dirección asociada al cliente.");
@@ -2292,7 +2293,7 @@ class tpvmod extends fs_controller
                         }
                      }
                      $linea->descripcion = $_POST['desc_'.$i];
-                     
+
                      if( !$serie->siniva AND $cliente->regimeniva != 'Exento' )
                      {
                         $imp0 = $this->impuesto->get_by_iva($_POST['iva_'.$i]);
@@ -2308,22 +2309,22 @@ class tpvmod extends fs_controller
                            $linea->recargo = floatval($_POST['recargo_'.$i]);
                         }
                      }
-                     
+
                      if($linea->iva > 0)
                         $linea->irpf = $factura->irpf;
-                     
+
                      $linea->pvpunitario = floatval($_POST['pvp_'.$i]);
                      $linea->cantidad = floatval($_POST['cantidad_'.$i]);
                      //$linea->dtopor = floatval($_POST['dto_'.$i]);
                      $linea->pvpsindto = ($linea->pvpunitario * $linea->cantidad);
                      $linea->pvptotal = floatval($_POST['neto_'.$i]);
-                     
+
                      if( $linea->save() )
                      {
                         /// descontamos del stock
                         if($articulo)
                             $articulo->sum_stock($factura->codalmacen, 0 - $linea->cantidad);
-                        
+
                         $factura->neto += $linea->pvptotal;
                         $factura->totaliva += ($linea->pvptotal * $linea->iva/100);
                         $factura->totalirpf += ($linea->pvptotal * $linea->irpf/100);
@@ -2335,7 +2336,7 @@ class tpvmod extends fs_controller
                         $continuar = FALSE;
                      }
             }
-            
+
             if($continuar)
             {
                /// redondeamos
@@ -2344,9 +2345,10 @@ class tpvmod extends fs_controller
                $factura->totalirpf = round($factura->totalirpf, FS_NF0);
                $factura->totalrecargo = round($factura->totalrecargo, FS_NF0);
                $factura->total = $factura->neto + $factura->totaliva - $factura->totalirpf + $factura->totalrecargo;
-               
+
 	       if( $factura->save() )
                {
+                  $factura->get_lineas_iva();
                   $this->new_message("<a href='".$factura->url()."'>Factura</a> guardada correctamente. <a  href='index.php?page=factura_detallada&id=".$factura->idfactura."'>Imprimir</a>");
                   $this->new_change('Factura Cliente '.$factura->codigo, $factura->url(), TRUE);
 		  $this->cliente_s = $this->cliente->get($this->clientedefault);
@@ -2365,7 +2367,7 @@ class tpvmod extends fs_controller
             $this->new_error_msg("¡Imposible guardar la Factura!");
       }
    }
-   
+
      private function edita_factura_cliente()
    {
       $continuar = TRUE;
@@ -2383,21 +2385,21 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Almacén no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $ejercicio = $this->ejercicio->get_by_fecha($_POST['fecha']);
       if( !$ejercicio )
       {
          $this->new_error_msg('Ejercicio no encontrado.');
          $continuar = FALSE;
       }
-      
+
       $serie = $this->serie->get($_POST['serie']);
       if( !$serie )
       {
          $this->new_error_msg('Serie no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $forma_pago = $this->forma_pago->get($_POST['forma_pago']);
       if( $forma_pago )
          $this->save_codpago( $forma_pago->codpago );
@@ -2406,14 +2408,14 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Forma de pago no encontrada.');
          $continuar = FALSE;
       }
-      
+
       $divisa = $this->divisa->get($_POST['divisa']);
       if( !$divisa )
       {
          $this->new_error_msg('Divisa no encontrada.');
          $continuar = FALSE;
       }
-      
+
       if( isset($_POST['imprimir_desc']) )
       {
          $this->imprimir_descripciones = TRUE;
@@ -2424,7 +2426,7 @@ class tpvmod extends fs_controller
          $this->imprimir_descripciones = FALSE;
          setcookie('imprimir_desc', FALSE, time()-FS_COOKIES_EXPIRE);
       }
-      
+
       if( isset($_POST['imprimir_obs']) )
       {
          $this->imprimir_observaciones = TRUE;
@@ -2435,11 +2437,11 @@ class tpvmod extends fs_controller
          $this->imprimir_observaciones = FALSE;
          setcookie('imprimir_obs', FALSE, time()-FS_COOKIES_EXPIRE);
       }
-      
+
       $factura = new factura_cliente();
       $factura = $factura->get($_POST['id']);
-      
-      
+
+
       if( $continuar )
       {
          $factura->fecha = $_POST['fecha'];
@@ -2454,7 +2456,7 @@ class tpvmod extends fs_controller
          $factura->numero2 = $_POST['numero2'];
          $factura->irpf = $serie->irpf;
          $factura->porcomision = $this->agente->porcomision;
-         
+
          foreach($this->cliente_s->get_direcciones() as $d)
          {
             if($d->domfacturacion)
@@ -2482,7 +2484,10 @@ class tpvmod extends fs_controller
                 $factura->totalrecargo = 0;
                 $lineas = $factura->get_lineas();
                 $articulo = new articulo();
-
+                $lineas_iva = array();
+                $lineas_valoriva = array();
+                $lineas_totaliva = array();
+                $lineas_total = array();
                 /// eliminamos las líneas que no encontremos en el $_POST
                 foreach($lineas as $l)
                 {
@@ -2523,12 +2528,12 @@ class tpvmod extends fs_controller
                          /// modificamos la línea
                          if($value->idlinea == intval($_POST['idlinea_'.$num]))
                          {
-                            
+
                             $encontrada = TRUE;
                             $cantidad_old = $value->cantidad;
                             $lineas[$k]->cantidad = floatval($_POST['cantidad_'.$num]);
                             $lineas[$k]->pvpunitario = floatval($_POST['pvp_'.$num]);
-                            $lineas[$k]->dtopor = floatval($_POST['dto_'.$num]);
+                            $lineas[$k]->dtopor = 0;
                             $lineas[$k]->pvpsindto = ($value->cantidad * $value->pvpunitario);
                             $lineas[$k]->pvptotal = ($value->cantidad * $value->pvpunitario * (100 - $value->dtopor)/100);
                             $lineas[$k]->descripcion = $_POST['desc_'.$num];
@@ -2549,6 +2554,16 @@ class tpvmod extends fs_controller
 
                             if( $lineas[$k]->save() )
                             {
+                               if(!isset($lineas_iva[$lineas[$k]->codimpuesto])){
+                                   $lineas_iva[$lineas[$k]->codimpuesto] = 0;
+                                   $lineas_valoriva[$lineas[$k]->codimpuesto] = 0;
+                                   $lineas_totaliva[$lineas[$k]->codimpuesto] = 0;
+                                   $lineas_total[$lineas[$k]->codimpuesto] = 0;
+                               }
+                               $lineas_iva[$lineas[$k]->codimpuesto] += $lineas[$k]->pvptotal;
+                               $lineas_valoriva[$lineas[$k]->codimpuesto] += $lineas[$k]->iva;
+                               $lineas_totaliva[$lineas[$k]->codimpuesto] += ($lineas[$k]->pvptotal * ($lineas[$k]->iva/100));
+                               $lineas_total[$lineas[$k]->codimpuesto] += ($lineas[$k]->pvptotal * (($lineas[$k]->iva/100)+1));
                                $factura->neto += $value->pvptotal;
                                $factura->totaliva += $value->pvptotal * $value->iva/100;
                                $factura->totalirpf += $value->pvptotal * $value->irpf/100;
@@ -2600,6 +2615,16 @@ class tpvmod extends fs_controller
 
                          if( $linea->save() )
                          {
+                             if(!isset($lineas_iva[$linea->codimpuesto])){
+                                $lineas_iva[$linea->codimpuesto] = 0;
+                                $lineas_valoriva[$linea->codimpuesto] = 0;
+                                $lineas_totaliva[$linea->codimpuesto] = 0;
+                                $lineas_total[$linea->codimpuesto] = 0;
+                            }
+                            $lineas_iva[$linea->codimpuesto] += $linea->pvptotal;
+                            $lineas_valoriva[$linea->codimpuesto] += $linea->iva;
+                            $lineas_totaliva[$linea->codimpuesto] += ($linea->pvptotal * ($linea->iva/100));
+                            $lineas_total[$linea->codimpuesto] += ($linea->pvptotal * (($linea->iva/100))+1);
                             if($art0)
                             {
                                /// actualizamos el stock
@@ -2617,11 +2642,11 @@ class tpvmod extends fs_controller
                    }
                 }
 
-                
-             }
-                  
 
-            
+             }
+
+
+
             if($continuar)
             {
                /// redondeamos
@@ -2630,13 +2655,25 @@ class tpvmod extends fs_controller
                $factura->totalirpf = round($factura->totalirpf, FS_NF0);
                $factura->totalrecargo = round($factura->totalrecargo, FS_NF0);
                $factura->total = $factura->neto + $factura->totaliva - $factura->totalirpf + $factura->totalrecargo;
-               
+
                if( $factura->save() )
                {
+                  $factura->get_lineas_iva();
+                  //Actualizamos las lineas del IVA
+                  $lista_lineas_iva = new linea_iva_factura_cliente();
+                  $lineasiva0 = $lista_lineas_iva->all_from_factura($factura->idfactura);
+                  foreach($lineasiva0 as $linea){
+                    if($lineas_iva[$linea->codimpuesto]){
+                        $linea->neto = $lineas_iva[$linea->codimpuesto];
+                        $linea->totaliva = $lineas_totaliva[$linea->codimpuesto];
+                        $linea->totallinea = $lineas_total[$linea->codimpuesto];
+                        $linea->save();
+                    }else{
+                        $linea->delete();
+                    }
+                  }
                   $this->new_message("<a href='./index.php?page=tpvmod&edita=factura&id=".$factura->idfactura."'>".FS_FACTURA."</a> guardado correctamente. <a  href='index.php?page=factura_detallada&id=".$factura->idfactura."'>Imprimir</a>");
-				  
-                  
-                  
+
                   /// actualizamos la caja
                   $this->caja->dinero_fin += $factura->total;
                   $this->caja->tickets += 1;
@@ -2658,7 +2695,7 @@ class tpvmod extends fs_controller
       }
       $this->cliente_s = $this->cliente->get($this->clientedefault);
    }
-   
+
    private function abrir_caja()
    {
       if($this->user->admin)
@@ -2673,8 +2710,8 @@ class tpvmod extends fs_controller
          $this->new_error_msg('Sólo un administrador puede abrir la caja.');
    }
 
-   
-   
+
+
    private function cerrar_caja()
    {
       $this->caja->fecha_fin = Date('d-m-Y H:i:s');
@@ -2694,17 +2731,17 @@ class tpvmod extends fs_controller
             $this->terminal->add_linea("Dinero pesado:\n\n\n");
             $this->terminal->add_linea("Observaciones:\n\n\n\n");
             $this->terminal->add_linea("Firma:\n\n\n\n\n\n\n");
-            
+
             /// encabezado común para los tickets
             $this->terminal->add_linea_big( $this->terminal->center_text($this->empresa->nombre, 16)."\n");
             $this->terminal->add_linea( $this->terminal->center_text($this->empresa->lema) . "\n\n");
             $this->terminal->add_linea( $this->terminal->center_text($this->empresa->direccion . " - " . $this->empresa->ciudad) . "\n");
             $this->terminal->add_linea( $this->terminal->center_text("CIF: " . $this->empresa->cifnif) . chr(27).chr(105) . "\n\n"); /// corta el papel
             $this->terminal->add_linea( $this->terminal->center_text($this->empresa->horario) . "\n");
-            
+
             $this->terminal->abrir_cajon();
             $this->terminal->save();
-            
+
             /// recargamos la página
             header('location: '.$this->url().'&terminal='.$this->terminal->id);
          }
@@ -2717,11 +2754,11 @@ class tpvmod extends fs_controller
       else
          $this->new_error_msg("¡Imposible cerrar la caja!");
    }
-   
+
    private function reimprimir_ticket()
    {
       $albaran = new albaran_cliente();
-      
+
       if($_GET['reticket'] == '')
       {
          foreach($albaran->all() as $alb)
@@ -2732,7 +2769,7 @@ class tpvmod extends fs_controller
       }
       else
          $alb0 = $albaran->get_by_codigo($_GET['reticket']);
-      
+
       if($alb0)
       {
          $this->imprimir_ticket($alb0, 1, FALSE);
@@ -2740,7 +2777,7 @@ class tpvmod extends fs_controller
       else
          $this->new_error_msg("Ticket no encontrado.");
    }
-   
+
    private function borrar_ticket()
    {
       $albaran = new albaran_cliente();
@@ -2759,11 +2796,11 @@ class tpvmod extends fs_controller
                   $art0->save();
                }
             }
-            
+
             if( $alb->delete() )
             {
                $this->new_message("Ticket ".$_GET['delete']." borrado correctamente.");
-               
+
                /// actualizamos la caja
                $this->caja->dinero_fin -= $alb->total;
                $this->caja->tickets -= 1;
@@ -2781,28 +2818,28 @@ class tpvmod extends fs_controller
       else
          $this->new_error_msg("Ticket no encontrado.");
    }
-   
-   
+
+
    public function tipos_a_guardar()
    {
       $tipos = array();
-      
+
       if( $this->user->have_access_to('ventas_presupuesto') )
       {
           $this->tipo="presupuesto";
          $tipos[] = array('tipo' => 'presupuesto', 'nombre' => ucfirst(FS_PRESUPUESTO).' para cliente');
       }
-      
+
       if( $this->user->have_access_to('ventas_pedido') )
          $tipos[] = array('tipo' => 'pedido', 'nombre' => ucfirst(FS_PEDIDO).' de cliente');
-      
+
       if( $this->user->have_access_to('ventas_albaran') )
          $tipos[] = array('tipo' => 'albaran', 'nombre' => ucfirst(FS_ALBARAN).' de cliente');
-      
+
       if( $this->user->have_access_to('ventas_factura') )
          $tipos[] = array('tipo' => 'factura', 'nombre' => 'Factura de cliente');
-      
+
       return $tipos;
    }
-   
+
 }
