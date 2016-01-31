@@ -125,7 +125,7 @@ class tpvmod extends fs_controller
                          $this->url_imprimir="./index.php?page=ventas_imprimir&albaran=TRUE&id=";
                          /// cargamos el cliente
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
-
+                         
                          /// comprobamos el presupuesto
                          $this->documento->full_test();
                       }
@@ -145,7 +145,7 @@ class tpvmod extends fs_controller
                          $this->url_imprimir="./index.php?page=imprimir_presu_pedi&presupuesto=TRUE&id=";
                          /// cargamos el cliente
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
-
+                         
                          /// comprobamos el albarán
                          $this->documento->full_test();
                       }
@@ -165,7 +165,7 @@ class tpvmod extends fs_controller
                          $this->url_imprimir="./index.php?page=imprimir_presu_pedi&pedido=TRUE&id=";
                          /// cargamos el cliente
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
-
+                         
                          /// comprobamos el albarán
                          $this->documento->full_test();
                       }
@@ -185,7 +185,7 @@ class tpvmod extends fs_controller
                          $this->url_imprimir="./index.php?page=factura_detallada&id=";
                          /// cargamos el cliente
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
-
+                         
                          /// comprobamos el albarán
                          $this->documento->full_test();
                       }
@@ -202,6 +202,7 @@ class tpvmod extends fs_controller
                 $this->cliente_s = $this->cliente->get($this->clientedefault);
              }
          }
+         
          $this->agente = $this->user->get_agente();
          $this->almacen = new almacen();
          $this->divisa = new divisa();
@@ -1891,7 +1892,7 @@ class tpvmod extends fs_controller
 
                if( $pedido->save() )
                {
-                  $this->new_message("<a href='./index.php?page=tpvmod&edita=pedido&id=".$pedido->idpedido."'>".FS_ALBARAN."</a> guardado correctamente. <a  href='index.php?page=ventas_imprimir&pedido=TRUE&id=".$pedido->idpedido."'>Imprimir</a>");
+                  $this->new_message("<a href='./index.php?page=tpvmod&edita=pedido&id=".$pedido->idpedido."'>".FS_PEDIDO."</a> guardado correctamente. <a  href='index.php?page=ventas_imprimir&pedido=TRUE&id=".$pedido->idpedido."'>Imprimir</a>");
 
 
 

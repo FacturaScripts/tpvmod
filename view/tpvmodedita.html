@@ -77,8 +77,8 @@
                        {if="$fsc->vienede==presupuesto"}
                        {#FS_PRESUPUESTOS#}
                        {/if}
-                       {if="$fsc->vienede==reserva"}
-                       {#FS_RESERVAS#}
+                       {if="$fsc->vienede==pedido"}
+                       {#FS_PEDIDOS#}
                        {/if}
                    </a></li>
                <li>
@@ -116,8 +116,8 @@
                        {if="$fsc->vienede==presupuesto"}
                        {#FS_PRESUPUESTOS#}
                        {/if}
-                       {if="$fsc->vienede==reserva"}
-                       {#FS_RESERVAS#}
+                       {if="$fsc->vienede==pedido"}
+                       {#FS_PEDIDOS#}
                        {/if}
                </span> creado por
                <a href="{$fsc->agente->url()}">{$fsc->agente->get_fullname()}</a>.
@@ -132,8 +132,8 @@
                        {if="$fsc->vienede==presupuesto"}
                        {#FS_PRESUPUESTOS#}
                        {/if}
-                       {if="$fsc->vienede==reserva"}
-                       {#FS_RESERVAS#}
+                       {if="$fsc->vienede==pedido"}
+                       {#FS_PEDIDOS#}
                        {/if}
                .
                {/if}</p>
@@ -381,7 +381,7 @@
          <div class="col-xs-12">
             <div class="form-group">
                Observaciones:
-               <textarea class="form-control input-sm" name="observaciones" rows="4"></textarea>
+               <textarea class="form-control input-sm" name="observaciones" rows="4">{$fsc->documento->observaciones}</textarea>
             </div>
          </div>
       </div>
