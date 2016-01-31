@@ -247,18 +247,18 @@ function add_linea_libre()
    $("#lineas_albaran").prepend("<tr id=\"linea_"+numlineas+"\">\n\
       <td><input type=\"hidden\" name=\"idlinea_"+numlineas+"\" value=\"-1\"/>\n\
          <input type=\"hidden\" name=\"referencia_"+numlineas+"\"/>\n\
-         <div class=\"form-control\"></div></td>\n\
-      <td><textarea class=\"form-control\" id=\"desc_"+numlineas+"\" name=\"desc_"+numlineas+"\" rows=\"1\" onclick=\"this.select()\"></textarea></td>\n\
-      <td><input type=\"number\" step=\"any\" id=\"cantidad_"+numlineas+"\" class=\"form-control text-right\" name=\"cantidad_"+numlineas+
+         <div class=\"form-control input-sm\"></div></td>\n\
+      <td><textarea class=\"form-control input-sm\" id=\"desc_"+numlineas+"\" name=\"desc_"+numlineas+"\" rows=\"1\" onclick=\"this.select()\"></textarea></td>\n\
+      <td><input type=\"number\" step=\"any\" id=\"cantidad_"+numlineas+"\" class=\"form-control text-right input-sm\" name=\"cantidad_"+numlineas+
          "\" onchange=\"recalcular()\" onkeyup=\"recalcular()\" autocomplete=\"off\" value=\"1\"/></td>\n\
       <td><button class=\"btn btn-sm btn-danger\" type=\"button\" onclick=\"$('#linea_"+numlineas+"').remove();recalcular();\">\n\
          <span class=\"glyphicon glyphicon-trash\"></span></button></td>\n\
-      <td><input type=\"text\" class=\"form-control text-right\" id=\"pvp_"+numlineas+"\" name=\"pvp_"+numlineas+"\" value=\"0\"\n\
+      <td><input type=\"text\" class=\"form-control text-right input-sm\" id=\"pvp_"+numlineas+"\" name=\"pvp_"+numlineas+"\" value=\"0\"\n\
           onkeyup=\"recalcular()\" onclick=\"this.select()\" autocomplete=\"off\"/></td>\n\
-      <td><input type=\"text\" class=\"form-control text-right\" id=\"neto_"+numlineas+"\" name=\"neto_"+numlineas+
+      <td><input type=\"text\" class=\"form-control text-right input-sm\" id=\"neto_"+numlineas+"\" name=\"neto_"+numlineas+
          "\" onchange=\"ajustar_neto()\" onclick=\"this.select()\" autocomplete=\"off\"/></td>\n\
       "+aux_all_impuestos(numlineas,codimpuesto)+"\n\
-      <td><input type=\"text\" class=\"form-control text-right\" id=\"total_"+numlineas+"\" name=\"total_"+numlineas+
+      <td><input type=\"text\" class=\"form-control text-right input-sm\" id=\"total_"+numlineas+"\" name=\"total_"+numlineas+
          "\" onchange=\"ajustar_total()\" onclick=\"this.select()\" autocomplete=\"off\"/></td></tr>");
    recalcular();
    
@@ -286,7 +286,7 @@ function aux_all_impuestos(num,codimpuesto)
       }
    }
    
-   var html = "<td><select id=\"iva_"+num+"\" class=\"form-control\" name=\"iva_"+num+"\" onchange=\"ajustar_iva('"+num+"')\">";
+   var html = "<td><select id=\"iva_"+num+"\" class=\"form-control input-sm\" name=\"iva_"+num+"\" onchange=\"ajustar_iva('"+num+"')\">";
    for(var i=0; i<all_impuestos.length; i++)
    {
       if(iva == all_impuestos[i].iva)
@@ -298,10 +298,10 @@ function aux_all_impuestos(num,codimpuesto)
    }
    html += "</select></td>";
    
-   html += "<td class=\"recargo\"><input type=\"text\" class=\"form-control text-right\" id=\"recargo_"+num+"\" name=\"recargo_"+num+
+   html += "<td class=\"recargo\"><input type=\"text\" class=\"form-control text-right input-sm\" id=\"recargo_"+num+"\" name=\"recargo_"+num+
            "\" value=\""+recargo+"\" onclick=\"this.select()\" onkeyup=\"recalcular()\" autocomplete=\"off\"/></td>";
    
-   html += "<td class=\"irpf\"><input type=\"text\" class=\"form-control text-right\" id=\"irpf_"+num+"\" name=\"irpf_"+num+
+   html += "<td class=\"irpf\"><input type=\"text\" class=\"form-control text-right input-sm\" id=\"irpf_"+num+"\" name=\"irpf_"+num+
          "\" value=\""+irpf+"\" onclick=\"this.select()\" onkeyup=\"recalcular()\" autocomplete=\"off\"/></td>";
    
    return html;
@@ -336,20 +336,20 @@ function add_articulo(ref,desc,pvp,dto,codimpuesto,cantidad)
             <input type=\"hidden\" id=\"iva_"+numlineas+"\" name=\"iva_"+numlineas+"\" value=\""+iva+"\"/>\n\
             <input type=\"hidden\" id=\"recargo_"+numlineas+"\" name=\"recargo_"+numlineas+"\" value=\""+recargo+"\"/>\n\
             <input type=\"hidden\" id=\"irpf_"+numlineas+"\" name=\"irpf_"+numlineas+"\" value=\""+irpf+"\"/>\n\
-            <div class=\"form-control\"><a target=\"_blank\" href=\"index.php?page=ventas_articulo&ref="+ref+"\">"+ref+"</a></div></td>\n\
-         <td><textarea class=\"form-control\" id=\"desc_"+numlineas+"\" name=\"desc_"+numlineas+"\" rows=\"1\" onclick=\"this.select()\">"+desc+"</textarea></td>\n\
-         <td><input type=\"number\" step=\"any\" id=\"cantidad_"+numlineas+"\" class=\"form-control text-right\" name=\"cantidad_"+numlineas+
+            <div class=\"form-control input-sm\"><a target=\"_blank\" href=\"index.php?page=ventas_articulo&ref="+ref+"\">"+ref+"</a></div></td>\n\
+         <td><textarea class=\"form-control input-sm\" id=\"desc_"+numlineas+"\" name=\"desc_"+numlineas+"\" rows=\"1\" onclick=\"this.select()\">"+desc+"</textarea></td>\n\
+         <td><input type=\"number\" step=\"any\" id=\"cantidad_"+numlineas+"\" class=\"form-control text-right input-sm\" name=\"cantidad_"+numlineas+
             "\" onchange=\"recalcular()\" onkeyup=\"recalcular()\" autocomplete=\"off\" value=\""+cantidad+"\"/></td>\n\
          <td><button class=\"btn btn-sm btn-danger\" type=\"button\" onclick=\"$('#linea_"+numlineas+"').remove();recalcular();\">\n\
             <span class=\"glyphicon glyphicon-trash\"></span></button></td>\n\
-         <td><input type=\"text\" class=\"form-control text-right\" id=\"pvp_"+numlineas+"\" name=\"pvp_"+numlineas+"\" value=\""+pvp+
+         <td><input type=\"text\" class=\"form-control text-right input-sm\" id=\"pvp_"+numlineas+"\" name=\"pvp_"+numlineas+"\" value=\""+pvp+
             "\" onkeyup=\"recalcular()\" onclick=\"this.select()\" autocomplete=\"off\"/></td>\n\
-         <td><input type=\"text\" class=\"form-control text-right\" id=\"neto_"+numlineas+"\" name=\"neto_"+numlineas+
+         <td><input type=\"text\" class=\"form-control text-right input-sm\" id=\"neto_"+numlineas+"\" name=\"neto_"+numlineas+
             "\" readonly/></td>\n\
-         <td class=\"text-right\"><div class=\"form-control\">"+iva+"</div></td>\n\
-         <td class=\"text-right recargo\"><div class=\"form-control\">"+recargo+"</div></td>\n\
-         <td class=\"text-right irpf\"><div class=\"form-control\">"+irpf+"</div></td>\n\
-         <td><input type=\"text\" class=\"form-control text-right\" id=\"total_"+numlineas+"\" name=\"total_"+numlineas+
+         <td class=\"text-right\"><div class=\"form-control input-sm\">"+iva+"</div></td>\n\
+         <td class=\"text-right recargo\"><div class=\"form-control input-sm\">"+recargo+"</div></td>\n\
+         <td class=\"text-right irpf\"><div class=\"form-control input-sm\">"+irpf+"</div></td>\n\
+         <td><input type=\"text\" class=\"form-control text-right input-sm\" id=\"total_"+numlineas+"\" name=\"total_"+numlineas+
             "\" onchange=\"ajustar_total()\" onclick=\"this.select()\" autocomplete=\"off\"/></td></tr>");
    recalcular();
    $("#modal_articulos").modal('hide');

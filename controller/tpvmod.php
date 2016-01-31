@@ -64,6 +64,9 @@ class tpvmod extends fs_controller
    public $tipo="factura";
    public $vienede;
    public $id_documento;
+   public $url_documento;
+   public $url_imprimir;
+   public $url_listado;
    public $clientedefault="000001";
    public $documento;
    /*la opcion por defecto aqui la inicializo a facturas. Pero si esta activado
@@ -108,17 +111,18 @@ class tpvmod extends fs_controller
              if($_GET['id'])
              {
                  $this->id_documento=$_GET['id'];
-
+                 $this->template="tpvmodedita";
                  if($_GET['edita']=="albaran")
                  {
                      $this->vienede="albaran";
-                     $this->template="tpvmodalbaran";
+                     
                      $albaran=new albaran_cliente();
                      $this->documento = $albaran->get($_GET['id']);
                      if($this->documento)
                       {
                          $this->page->title = $this->documento->codigo;
-
+                         $this->url_listado="./index.php?page=tpvmod_albaranes";
+                         $this->url_imprimir="./index.php?page=ventas_imprimir&albaran=TRUE&id=";
                          /// cargamos el cliente
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
 
@@ -131,13 +135,14 @@ class tpvmod extends fs_controller
                  elseif($_GET['edita']=="presupuesto")
                  {
                      $this->vienede="presupuesto";
-                     $this->template="tpvmodpresupuesto";
+                     //$this->template="tpvmodpresupuesto";
                      $presupuesto=new presupuesto_cliente();
                      $this->documento = $presupuesto->get($_GET['id']);
                      if($this->documento)
                       {
                          $this->page->title = $this->documento->codigo;
-
+                         $this->url_listado="./index.php?page=tpvmod_presupuestos";
+                         $this->url_imprimir="./index.php?page=imprimir_presu_pedi&presupuesto=TRUE&id=";
                          /// cargamos el cliente
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
 
@@ -150,13 +155,14 @@ class tpvmod extends fs_controller
                  elseif($_GET['edita']=="pedido")
                  {
                      $this->vienede="pedido";
-                     $this->template="tpvmodpedido";
+                     //$this->template="tpvmodpedido";
                      $pedido=new pedido_cliente();
                      $this->documento = $pedido->get($_GET['id']);
                      if($this->documento)
                       {
                          $this->page->title = $this->documento->codigo;
-
+                         $this->url_listado="./index.php?page=tpvmod_pedidos";
+                         $this->url_imprimir="./index.php?page=imprimir_presu_pedi&pedido=TRUE&id=";
                          /// cargamos el cliente
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
 
@@ -169,13 +175,14 @@ class tpvmod extends fs_controller
                  elseif($_GET['edita']=="factura")
                  {
                      $this->vienede="factura";
-                     $this->template="tpvmodfactura";
+                     //$this->template="tpvmodfactura";
                      $factura=new factura_cliente();
                      $this->documento = $factura->get($_GET['id']);
                      if($this->documento)
                       {
                          $this->page->title = $this->documento->codigo;
-
+                         $this->url_listado="./index.php?page=tpvmod_facturas";
+                         $this->url_imprimir="./index.php?page=factura_detallada&id=";
                          /// cargamos el cliente
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
 
@@ -2190,6 +2197,7 @@ class tpvmod extends fs_controller
    {
       $continuar = TRUE;
       $this->cliente_s = $this->cliente->get($_POST['cliente']);
+      
       if( !$this->cliente_s)
       {
          $this->new_error_msg('Cliente no encontrado.');
@@ -2258,6 +2266,14 @@ class tpvmod extends fs_controller
 
       $factura = new factura_cliente();
       $factura = $factura->get($_POST['id']);
+      foreach($factura->get_lineas_iva() as $liva)
+      {
+         $liva->delete();
+      }
+      $factura->neto = 0;
+      $factura->totaliva = 0;
+      $factura->totalirpf = 0;
+      $factura->totalrecargo = 0;
 
 
       if( $continuar )
@@ -2378,10 +2394,14 @@ class tpvmod extends fs_controller
                                    $lineas_totaliva[$lineas[$k]->codimpuesto] = 0;
                                    $lineas_total[$lineas[$k]->codimpuesto] = 0;
                                }
-                               $lineas_iva[$lineas[$k]->codimpuesto] += $lineas[$k]->pvptotal;
-                               $lineas_valoriva[$lineas[$k]->codimpuesto] += $lineas[$k]->iva;
-                               $lineas_totaliva[$lineas[$k]->codimpuesto] += ($lineas[$k]->pvptotal * ($lineas[$k]->iva/100));
-                               $lineas_total[$lineas[$k]->codimpuesto] += ($lineas[$k]->pvptotal * (($lineas[$k]->iva/100)+1));
+                               else 
+                               {
+                                   $lineas_iva[$lineas[$k]->codimpuesto] += $lineas[$k]->pvptotal;
+                                   $lineas_valoriva[$lineas[$k]->codimpuesto] += $lineas[$k]->iva;
+                                   $lineas_totaliva[$lineas[$k]->codimpuesto] += ($lineas[$k]->pvptotal * ($lineas[$k]->iva/100));
+                                   $lineas_total[$lineas[$k]->codimpuesto] += ($lineas[$k]->pvptotal * (($lineas[$k]->iva/100)+1));
+                               }
+                               
                                $factura->neto += $value->pvptotal;
                                $factura->totaliva += $value->pvptotal * $value->iva/100;
                                $factura->totalirpf += $value->pvptotal * $value->irpf/100;
@@ -2473,7 +2493,6 @@ class tpvmod extends fs_controller
                $factura->totalirpf = round($factura->totalirpf, FS_NF0);
                $factura->totalrecargo = round($factura->totalrecargo, FS_NF0);
                $factura->total = $factura->neto + $factura->totaliva - $factura->totalirpf + $factura->totalrecargo;
-
                if( $factura->save() )
                {
                   $factura->get_lineas_iva();
