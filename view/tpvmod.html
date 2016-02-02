@@ -4,7 +4,7 @@
    {if="$fsc->caja"}
       {if="$fsc->caja->codagente!=$fsc->user->codagente"}
       <div class="thumbnail">
-         <img src='view/img/big_lock.png' alt="acceso denegado"/>
+         <img src='view/img/big_lock.png' fft="acceso denegado"/>
       </div>
       {elseif="!$fsc->cliente_s"}
       <div class="alert alert-danger">No hay clientes. Debes añadir al menos uno.</div>
