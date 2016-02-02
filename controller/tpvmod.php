@@ -69,6 +69,7 @@ class tpvmod extends fs_controller
    public $url_listado;
    public $clientedefault="000001";
    public $documento;
+   public $nom_documento;
    /*la opcion por defecto aqui la inicializo a facturas. Pero si esta activado
     * Los presupuestos la cambio a presupuestos en el controlador
     */
@@ -123,6 +124,7 @@ class tpvmod extends fs_controller
                          $this->page->title = $this->documento->codigo;
                          $this->url_listado="./index.php?page=tpvmod_albaranes";
                          $this->url_imprimir="./index.php?page=ventas_imprimir&albaran=TRUE&id=";
+                         $this->nom_documento=FS_ALBARANES;
                          /// cargamos el cliente
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
                          
@@ -144,13 +146,14 @@ class tpvmod extends fs_controller
                          $this->url_listado="./index.php?page=tpvmod_presupuestos";
                          $this->url_imprimir="./index.php?page=imprimir_presu_pedi&presupuesto=TRUE&id=";
                          /// cargamos el cliente
+                         $this->nom_documento=FS_PRESUPUESTOS;
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
                          
                          /// comprobamos el albarán
                          $this->documento->full_test();
                       }
                       else
-                         $this->new_error_msg("¡".FS_ALBARAN." de cliente no encontrado!");
+                         $this->new_error_msg("¡".FS_PRESUPUESTO." de cliente no encontrado!");
                  }
                  elseif($_GET['edita']=="pedido")
                  {
@@ -163,6 +166,7 @@ class tpvmod extends fs_controller
                          $this->page->title = $this->documento->codigo;
                          $this->url_listado="./index.php?page=tpvmod_pedidos";
                          $this->url_imprimir="./index.php?page=imprimir_presu_pedi&pedido=TRUE&id=";
+                         $this->nom_documento=FS_PEDIDOS;
                          /// cargamos el cliente
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
                          
@@ -170,7 +174,7 @@ class tpvmod extends fs_controller
                          $this->documento->full_test();
                       }
                       else
-                         $this->new_error_msg("¡".FS_PRESUPUESTO." de cliente no encontrado!");
+                         $this->new_error_msg("¡".FS_PEDIDO." de cliente no encontrado!");
                  }
                  elseif($_GET['edita']=="factura")
                  {
@@ -183,6 +187,7 @@ class tpvmod extends fs_controller
                          $this->page->title = $this->documento->codigo;
                          $this->url_listado="./index.php?page=tpvmod_facturas";
                          $this->url_imprimir="./index.php?page=factura_detallada&id=";
+                         $this->nom_documento=FS_FACTURAS;
                          /// cargamos el cliente
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
                          
@@ -190,7 +195,7 @@ class tpvmod extends fs_controller
                          $this->documento->full_test();
                       }
                       else
-                         $this->new_error_msg("¡".FS_PRESUPUESTO." de cliente no encontrado!");
+                         $this->new_error_msg("¡".FS_FACTURA." de cliente no encontrado!");
                  }
                  else
                  {
@@ -1796,7 +1801,7 @@ class tpvmod extends fs_controller
                             $cantidad_old = $value->cantidad;
                             $lineas[$k]->cantidad = floatval($_POST['cantidad_'.$num]);
                             $lineas[$k]->pvpunitario = floatval($_POST['pvp_'.$num]);
-                            $lineas[$k]->dtopor = floatval($_POST['dto_'.$num]);
+                            //$lineas[$k]->dtopor = floatval($_POST['dto_'.$num]);
                             $lineas[$k]->pvpsindto = ($value->cantidad * $value->pvpunitario);
                             $lineas[$k]->pvptotal = ($value->cantidad * $value->pvpunitario * (100 - $value->dtopor)/100);
                             $lineas[$k]->descripcion = $_POST['desc_'.$num];

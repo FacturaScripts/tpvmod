@@ -68,18 +68,7 @@
             <ol class="breadcrumb" style="margin-bottom:5px;">
                <li><a href="{$fsc->url()}">TPVMOD</a></li>
                <li><a href="{$fsc->url_listado}" class="text-capitalize">
-                       {if="$fsc->vienede==albaran"}
-                       {#FS_ALBARANES#}
-                       {/if}
-                       {if="$fsc->vienede==factura"}
-                       {#FS_FACTURAS#}
-                       {/if}
-                       {if="$fsc->vienede==presupuesto"}
-                       {#FS_PRESUPUESTOS#}
-                       {/if}
-                       {if="$fsc->vienede==pedido"}
-                       {#FS_PEDIDOS#}
-                       {/if}
+                       {$fsc->nom_documento}
                    </a></li>
                <li>
                   {loop="$fsc->serie->all()"}
@@ -107,37 +96,13 @@
             <div class="col-md-2">
                 <p class="help-block">{if="$fsc->agente"}
                <span class="text-capitalize">
-                   {if="$fsc->vienede==albaran"}
-                       {#FS_ALBARANES#}
-                       {/if}
-                       {if="$fsc->vienede==factura"}
-                       {#FS_FACTURAS#}
-                       {/if}
-                       {if="$fsc->vienede==presupuesto"}
-                       {#FS_PRESUPUESTOS#}
-                       {/if}
-                       {if="$fsc->vienede==pedido"}
-                       {#FS_PEDIDOS#}
-                       {/if}
+                   {$fsc->nom_documento}
                </span> creado por
                <a href="{$fsc->agente->url()}">{$fsc->agente->get_fullname()}</a>.
                {else}
                Sin datos de qué empleado ha creado este 
-               {if="$fsc->vienede==albaran"}
-                       {#FS_ALBARANES#}
-                       {/if}
-                       {if="$fsc->vienede==factura"}
-                       {#FS_FACTURAS#}
-                       {/if}
-                       {if="$fsc->vienede==presupuesto"}
-                       {#FS_PRESUPUESTOS#}
-                       {/if}
-                       {if="$fsc->vienede==pedido"}
-                       {#FS_PEDIDOS#}
-                       {/if}
-               .
-               {/if}</p>
-               
+               {$fsc->nom_documento}</p>
+               {/if}
             </div>
          </div>
 </div>
