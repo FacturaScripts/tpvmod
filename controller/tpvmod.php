@@ -116,7 +116,7 @@ class tpvmod extends fs_controller
                  if($_GET['edita']=="albaran")
                  {
                      $this->vienede="albaran";
-                     
+
                      $albaran=new albaran_cliente();
                      $this->documento = $albaran->get($_GET['id']);
                      if($this->documento)
@@ -127,7 +127,7 @@ class tpvmod extends fs_controller
                          $this->nom_documento=FS_ALBARANES;
                          /// cargamos el cliente
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
-                         
+
                          /// comprobamos el presupuesto
                          $this->documento->full_test();
                       }
@@ -148,7 +148,7 @@ class tpvmod extends fs_controller
                          /// cargamos el cliente
                          $this->nom_documento=FS_PRESUPUESTOS;
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
-                         
+
                          /// comprobamos el albarán
                          $this->documento->full_test();
                       }
@@ -169,7 +169,7 @@ class tpvmod extends fs_controller
                          $this->nom_documento=FS_PEDIDOS;
                          /// cargamos el cliente
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
-                         
+
                          /// comprobamos el albarán
                          $this->documento->full_test();
                       }
@@ -190,7 +190,7 @@ class tpvmod extends fs_controller
                          $this->nom_documento=FS_FACTURAS;
                          /// cargamos el cliente
                          $this->cliente_s = $this->cliente->get($this->documento->codcliente);
-                         
+
                          /// comprobamos el albarán
                          $this->documento->full_test();
                       }
@@ -207,7 +207,7 @@ class tpvmod extends fs_controller
                 $this->cliente_s = $this->cliente->get($this->clientedefault);
              }
          }
-         
+
          $this->agente = $this->user->get_agente();
          $this->almacen = new almacen();
          $this->divisa = new divisa();
@@ -1006,7 +1006,7 @@ class tpvmod extends fs_controller
 
       if($continuar)
       {
-         
+
          $pedido->fecha = $this->today();
          $pedido->codalmacen = $almacen->codalmacen;
          $pedido->codejercicio = $ejercicio->codejercicio;
@@ -1515,7 +1515,7 @@ class tpvmod extends fs_controller
                             $cantidad_old = $value->cantidad;
                             $lineas[$k]->cantidad = floatval($_POST['cantidad_'.$num]);
                             $lineas[$k]->pvpunitario = floatval($_POST['pvp_'.$num]);
-                            $lineas[$k]->dtopor = floatval($_POST['dto_'.$num]);
+                            //$lineas[$k]->dtopor = floatval($_POST['dto_'.$num]);
                             $lineas[$k]->pvpsindto = ($value->cantidad * $value->pvpunitario);
                             $lineas[$k]->pvptotal = ($value->cantidad * $value->pvpunitario * (100 - $value->dtopor)/100);
                             $lineas[$k]->descripcion = $_POST['desc_'.$num];
@@ -1575,7 +1575,7 @@ class tpvmod extends fs_controller
                          $linea->irpf = floatval($_POST['irpf_'.$num]);
                          $linea->cantidad = floatval($_POST['cantidad_'.$num]);
                          $linea->pvpunitario = floatval($_POST['pvp_'.$num]);
-                         $linea->dtopor = floatval($_POST['dto_'.$num]);
+                         //$linea->dtopor = floatval($_POST['dto_'.$num]);
                          $linea->pvpsindto = ($linea->cantidad * $linea->pvpunitario);
                          $linea->pvptotal = ($linea->cantidad * $linea->pvpunitario * (100 - $linea->dtopor)/100);
 
@@ -1856,7 +1856,7 @@ class tpvmod extends fs_controller
                          $linea->irpf = floatval($_POST['irpf_'.$num]);
                          $linea->cantidad = floatval($_POST['cantidad_'.$num]);
                          $linea->pvpunitario = floatval($_POST['pvp_'.$num]);
-                         $linea->dtopor = floatval($_POST['dto_'.$num]);
+                         //$linea->dtopor = floatval($_POST['dto_'.$num]);
                          $linea->pvpsindto = ($linea->cantidad * $linea->pvpunitario);
                          $linea->pvptotal = ($linea->cantidad * $linea->pvpunitario * (100 - $linea->dtopor)/100);
 
@@ -2079,7 +2079,7 @@ class tpvmod extends fs_controller
                             $cantidad_old = $value->cantidad;
                             $lineas[$k]->cantidad = floatval($_POST['cantidad_'.$num]);
                             $lineas[$k]->pvpunitario = floatval($_POST['pvp_'.$num]);
-                            $lineas[$k]->dtopor = floatval($_POST['dto_'.$num]);
+                            //$lineas[$k]->dtopor = floatval($_POST['dto_'.$num]);
                             $lineas[$k]->pvpsindto = ($value->cantidad * $value->pvpunitario);
                             $lineas[$k]->pvptotal = ($value->cantidad * $value->pvpunitario * (100 - $value->dtopor)/100);
                             $lineas[$k]->descripcion = $_POST['desc_'.$num];
@@ -2173,7 +2173,7 @@ class tpvmod extends fs_controller
 
                if( $presupuesto->save() )
                {
-                  $this->new_message("<a href='./index.php?page=tpvmod&edita=presupuesto&id=".$presupuesto->idpresupuesto."'>".FS_PRESUPUESTO."</a> guardado correctamente. <a  href='index.php?page=ventas_imprimir&presupuesto=TRUE&id=".$presupuesto->idpresupuesto."'>Imprimir</a>");
+                  $this->new_message("<a href='./index.php?page=tpvmod&edita=presupuesto&id=".$presupuesto->idpresupuesto."'>".FS_PRESUPUESTO."</a> guardado correctamente. <a  href='index.php?page=imprimir_presu_pedi&presupuesto=TRUE&id=".$presupuesto->idpresupuesto."'>Imprimir</a>");
 
 
 
@@ -2203,7 +2203,7 @@ class tpvmod extends fs_controller
    {
       $continuar = TRUE;
       $this->cliente_s = $this->cliente->get($_POST['cliente']);
-      
+
       if( !$this->cliente_s)
       {
          $this->new_error_msg('Cliente no encontrado.');
@@ -2400,14 +2400,14 @@ class tpvmod extends fs_controller
                                    $lineas_totaliva[$lineas[$k]->codimpuesto] = 0;
                                    $lineas_total[$lineas[$k]->codimpuesto] = 0;
                                }
-                               else 
+                               else
                                {
                                    $lineas_iva[$lineas[$k]->codimpuesto] += $lineas[$k]->pvptotal;
                                    $lineas_valoriva[$lineas[$k]->codimpuesto] += $lineas[$k]->iva;
                                    $lineas_totaliva[$lineas[$k]->codimpuesto] += ($lineas[$k]->pvptotal * ($lineas[$k]->iva/100));
                                    $lineas_total[$lineas[$k]->codimpuesto] += ($lineas[$k]->pvptotal * (($lineas[$k]->iva/100)+1));
                                }
-                               
+
                                $factura->neto += $value->pvptotal;
                                $factura->totaliva += $value->pvptotal * $value->iva/100;
                                $factura->totalirpf += $value->pvptotal * $value->irpf/100;
