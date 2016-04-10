@@ -479,6 +479,120 @@ class tpvmod extends fs_controller
             return false;
    }
 
+  public function busca_articulos($query='', $offset=0, $codfamilia='', $con_stock=FALSE, $codfabricante='', $bloqueados=FALSE)
+   {
+      $artilist = array();
+      $query = $this->articulo->no_html( strtolower($query) );
+      
+      /*if($query != '' AND $offset == 0 AND $codfamilia == '' AND $codfabricante == '' AND !$con_stock AND !$bloqueados)
+      {
+         /// intentamos obtener los datos de memcache
+         if( $this->new_search_tag($query) )
+         {
+            $artilist = $this->cache->get_array('articulos_search_'.$query);
+         }
+      }*/
+      
+      if( count($artilist) <= 1 )
+      {
+         $sql = "SELECT * FROM articulos";
+         $separador = ' WHERE';
+         
+         if($codfamilia != '')
+         {
+            $sql .= $separador." codfamilia = ".$this->articulo->var2str($codfamilia);
+            $separador = ' AND';
+         }
+         
+         if($codfabricante != '')
+         {
+            $sql .= $separador." codfabricante = ".$this->articulo->var2str($codfabricante);
+            $separador = ' AND';
+         }
+         
+         if($con_stock)
+         {
+            $sql .= $separador." stockfis > 0";
+            $separador = ' AND';
+         }
+         
+         if($bloqueados)
+         {
+            $sql .= $separador." bloqueado";
+            $separador = ' AND';
+         }
+         else
+         {
+            $sql .= $separador." bloqueado = FALSE";
+            $separador = ' AND';
+         }
+         
+         $palabras=explode(" ",$query); 
+         $numero=count($palabras); 
+         if($query == '')
+         {
+            /// nada
+         }
+         else if( is_numeric($query) )
+         {
+            $sql .= $separador." ( referencia LIKE '%".$query."%' OR equivalencia LIKE '%".$query."%'"
+                    . " OR descripcion LIKE '%".$query."%' OR codbarras = '".$query."')";
+         }
+         else if($numero==1)
+         {
+            $sql .= $separador." (lower(referencia) LIKE '%".$query."%' OR lower(equivalencia) LIKE '%".$query."%'"
+                    . " OR lower(descripcion) LIKE '%".$query."%')";
+         }
+         else
+         {
+            $buscar = str_replace(' ', '%', $query);
+            $sql .= $separador." (";
+            $sql .= "lower(referencia) LIKE '%".$buscar."%'"
+                    . " OR lower(equivalencia) LIKE '%".$buscar."%' OR (";
+             $i=0;
+             foreach ($palabras as $palabra) {
+                 $sql .= " lower(descripcion) LIKE '%".$palabra."%'";
+                 $i++;
+                 if($i<count($palabras))
+                 {
+                     $sql .=") AND (";
+                 }
+             }
+             $sql .="))";
+         }
+         
+         if( strtolower(FS_DB_TYPE) == 'mysql' )
+         {
+            $sql .= " ORDER BY lower(referencia) ASC";
+         }
+         else
+         {
+            $sql .= " ORDER BY referencia ASC";
+         }
+         //$this->debug_to_console($sql);
+         //$this->new_message($sql);
+         $data = $this->db->select_limit($sql, FS_ITEM_LIMIT, $offset);
+         if($data)
+         {
+            foreach($data as $a)
+            {
+               $artilist[] = new articulo($a);
+            }
+         }
+      }
+      
+      return $artilist;
+   }
+   
+   function debug_to_console( $data ) {
+
+    if ( is_array( $data ) )
+        $output = "<script>console.log( 'Debug Objects: " . implode( ',', $data) . "' );</script>";
+    else
+        $output = "<script>console.log( 'Debug Objects: " . $data . "' );</script>";
+
+    echo $output;
+}
 
    private function new_search()
    {
@@ -493,7 +607,7 @@ class tpvmod extends fs_controller
       }
 
       $con_stock = isset($_POST['con_stock']);
-      $this->results = $this->articulo->search($this->query, 0, $codfamilia, $con_stock);
+      $this->results = $this->busca_articulos($this->query, 0, $codfamilia, $con_stock);
 
       /// añadimos el descuento y la cantidad
       foreach($this->results as $i => $value)

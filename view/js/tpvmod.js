@@ -373,12 +373,15 @@ function buscar_articulos()
          dataType: 'html',
          data: $("form[name=f_buscar_articulos]").serialize(),
          success: function(datos) {
+             
+            console.log(datos);
             var re = /<!--(.*?)-->/g;
             var m = re.exec( datos );
             if( m[1] == document.f_buscar_articulos.query.value )
             {
                $("#search_results").html(datos);
             }
+             
          }
       });
    }
