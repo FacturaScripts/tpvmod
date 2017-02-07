@@ -1,3 +1,3 @@
-<h1>Plugin de un tpv basado en el principal de Facturascripts pero te permite 
-deractamente elegir en que quieres guardar la venta y no trabaja con decuentos. </h1>
+TPV basado en el principal de FacturaScripts pero que permite guardar la venta como factura, albarán, pedido o presupuesto. Además permite hacer nuevas ventas a partir de documentos ya existentes.
 
+https://www.facturascripts.com/plugin/tpvmod
